@@ -1,193 +1,405 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Dot Line Puzzle</title>
-  <style>
-    body { background:#222; color:#fff; font-family:sans-serif; display:flex; flex-direction:column; align-items:center; margin:0;}
-    #board { display:grid; grid-template-columns:repeat(6,50px); grid-template-rows:repeat(6,50px); gap:6px; margin:20px 0;}
-    .cell { width:48px; height:48px; background:#111; border-radius:8px; display:flex; align-items:center; justify-content:center; position:relative;}
-    .dot { width:34px; height:34px; border-radius:50%; display:block; margin:auto;}
-    #level { margin:10px; }
-    #nextbtn { padding:10px 20px; font-weight:bold; display:none; margin-bottom:10px;}
-    #resetbtn { padding:6px 12px; margin-bottom:10px;}
-    canvas { position:absolute; top:0; left:0;}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dot Line – Connect Same Color (40 Levels)</title>
+<style>
+  :root{
+    --bg:#0f1220;--panel:#151933;--tile:#1d2247;--tile-alt:#202657;--text:#e9ecff;--muted:#aeb6ff;--accent:#7c9aff;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;background:linear-gradient(180deg,#0b0e1a,#13162d 40%,#0b0e1a);color:var(--text);display:flex;align-items:center;justify-content:center}
+  .wrap{width:min(96vw,900px);}
+  header{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:10px}
+  h1{font-size:20px;margin:0;font-weight:700;letter-spacing:.3px}
+  .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  button, select{background:var(--panel);color:var(--text);border:1px solid #2a2f66;border-radius:12px;padding:10px 14px;font-weight:600;cursor:pointer;transition:.2s;box-shadow:0 4px 12px rgba(0,0,0,.25)}
+  button:hover{transform:translateY(-1px)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  .board-wrap{background:var(--panel);padding:14px;border-radius:18px;box-shadow:0 12px 28px rgba(0,0,0,.35)}
+  .board{position:relative;aspect-ratio:1/1;width:min(92vw,720px);max-height:72vh;margin:auto;border-radius:14px;overflow:hidden}
+  .grid{position:absolute;inset:0;display:grid;gap:6px;padding:10px}
+  .cell{background:var(--tile);border-radius:12px;position:relative;touch-action:none}
+  .cell.alt{background:var(--tile-alt)}
+  .dot{position:absolute;inset:12%;border-radius:50%;box-shadow:0 4px 10px rgba(0,0,0,.35), inset 0 -3px 0 rgba(0,0,0,.2)}
+  .svg{position:absolute;inset:0;pointer-events:none}
+  .hud{display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding:0 4px;color:var(--muted);font-size:14px}
+  .pill{background:#101438;border:1px solid #28307a;border-radius:999px;padding:6px 10px}
+  .color-key{display:flex;gap:6px;flex-wrap:wrap}
+  .swatch{width:14px;height:14px;border-radius:3px;border:1px solid rgba(255,255,255,.5)}
+  .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#11173a;border:1px solid #3140a8;color:#fff;padding:10px 14px;border-radius:999px;opacity:0;pointer-events:none;transition:.35s}
+  .toast.show{opacity:1}
+  @media (max-width:520px){
+    h1{font-size:18px}
+    button,select{padding:9px 12px}
+    .board{max-height:68vh}
+  }
+</style>
 </head>
 <body>
-  <h2 id="level">Level 1</h2>
-  <button id="nextbtn" onclick="nextLevel()">Next Level</button>
-  <button id="resetbtn" onclick="drawBoard()">Reset Level</button>
-  <div id="board"></div>
-  <script>
-    // Define 40 sample levels (feel free to adjust or add more)
-    // Use: 0 = empty, 1-6 = color index, must appear in pairs
-    const levels = [
-      [
-        [1,0,0,0,0,2],
-        [0,0,0,0,0,0],
-        [0,0,2,0,0,0],
-        [0,0,0,0,0,0],
-        [0,0,0,0,1,0],
-        [0,0,0,0,0,0],
-      ],
-      [
-        [1,0,0,0,2,0],
-        [0,0,0,0,0,0],
-        [0,0,3,0,0,0],
-        [0,2,0,0,0,0],
-        [0,0,0,3,0,1],
-        [0,0,0,0,0,0],
-      ],
-      // ... add up to 40 levels, here's a pattern, repeat/modify as needed:
-      [
-        [1,0,0,2,0,3],
-        [0,0,4,0,0,0],
-        [2,0,4,0,0,0],
-        [1,0,0,0,0,0],
-        [0,0,0,0,0,3],
-        [0,0,0,0,0,0],
-      ],
-      [
-        [1,0,0,0,0,2],
-        [0,3,0,4,0,0],
-        [0,0,4,0,0,0],
-        [2,0,0,0,3,0],
-        [0,0,0,1,0,0],
-        [0,0,0,0,0,0],
-      ],
-      // Duplicate, shuffle, or expand this style up to 40 levels!
-    ];
+  <div class="wrap">
+    <header>
+      <h1>Dot Line – Connect Same Color</h1>
+      <div class="controls">
+        <button id="prevBtn" title="Previous level">◀</button>
+        <select id="levelSelect" title="Choose level"></select>
+        <button id="nextBtn" title="Next level">▶</button>
+        <button id="resetBtn" title="Reset level">Reset</button>
+        <button id="undoBtn" title="Undo last move">Undo</button>
+      </div>
+    </header><div class="board-wrap">
+  <div id="board" class="board">
+    <svg class="svg" viewBox="0 0 1000 1000" preserveAspectRatio="none"></svg>
+    <div class="grid" id="grid"></div>
+  </div>
+  <div class="hud">
+    <div class="pill">Level <span id="levelNum">1</span> / <span id="levelTotal">40</span></div>
+    <div class="color-key" id="colorKey"></div>
+  </div>
+</div>
 
-    // Expand placeholder levels to 40 for demonstration
-    while (levels.length < 40) {
-      let temp = JSON.parse(JSON.stringify(levels[levels.length % 4]));
-      // Rotate or mutate dots for variety
-      for (let i=0; i<6; i++) temp[i] = temp[i].slice().reverse();
-      levels.push(temp);
-    }
+  </div>  <div id="toast" class="toast">Great! Level complete 🎉</div><script>
+(() => {
+  // ======== Utility ========
+  const COLORS = [
+    '#ff4d4d', '#4dd0ff', '#ffd24d', '#8dff4d', '#b84dff', '#ff7ab2', '#56ffbd', '#ffa64d', '#6e9bff'
+  ];
+  const DIRS = [[1,0],[-1,0],[0,1],[0,-1]];
+  const byId = id => document.getElementById(id);
+  const toast = (msg) => { const t=byId('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 1400); };
 
-    const colors = ["#f00", "#0f0", "#00f", "#ff0", "#0ff", "#f0f"];
-    let curLevel = 0;
-    let paths = [], started=null, drawingPath=[];
-    const board = document.getElementById('board');
-    const levelH = document.getElementById('level');
-    const nextbtn = document.getElementById('nextbtn');
-    let canvas, ctx;
+  // ======== Level Definitions ========
+  // Levels are 5x5–7x7 boards. Each entry is a matrix of letters A..I for color pairs; 0 for empty.
+  // Win condition: connect all like letters with non-overlapping orthogonal paths.
+  // (Grid fill is NOT required – makes level design simpler and mobile-friendly.)
 
-    function drawBoard() {
-      board.innerHTML = '';
-      paths = []; drawingPath = []; started = null; nextbtn.style.display = 'none';
+  function rot90(grid){ // rotate clockwise
+    const n=grid.length,m=grid[0].length; const out=Array.from({length:m},()=>Array(n).fill(0));
+    for(let r=0;r<n;r++) for(let c=0;c<m;c++) out[c][n-1-r]=grid[r][c];
+    return out;
+  }
+  const G = (rows) => rows.map(r=>r.split('').map(ch=>ch==='.'?0:ch));
 
-      if (!canvas) {
-        canvas = document.createElement('canvas');
-        canvas.width = 300; canvas.height = 300;
-        canvas.style.pointerEvents = 'none';
-        canvas.style.position = 'absolute';
-        canvas.style.top = '0'; canvas.style.left = '0';
-        ctx = canvas.getContext('2d');
-        board.appendChild(canvas);
+  // Base pack of 10 hand-made solvable layouts (5x5 & 6x6), then we add rotated variants to reach 40.
+  const base = [
+    // L1 (5x5) – gentle
+    G([
+      'A...B',
+      '.C...',
+      '..C..',
+      '...D.',
+      'B..DA'
+    ]),
+    // L2 (5x5)
+    G([
+      'A...A',
+      '..B..',
+      '.....',
+      '..B..',
+      'C...C'
+    ]),
+    // L3 (5x5)
+    G([
+      'A...B',
+      '.A...',
+      '.....',
+      '...B.',
+      'C...C'
+    ]),
+    // L4 (6x6)
+    G([
+      'A....B',
+      '.C..C.',
+      '......',
+      '.D..D.',
+      '......',
+      'B....A'
+    ]),
+    // L5 (5x5)
+    G([
+      'A.B..',
+      '.....',
+      '..C..',
+      '.....',
+      '..B.A'
+    ]),
+    // L6 (6x6)
+    G([
+      'A....B',
+      '......',
+      '.C..C.',
+      '......',
+      '.D..D.',
+      'B....A'
+    ]),
+    // L7 (5x5)
+    G([
+      'A...A',
+      '.B.B.',
+      '.....',
+      '.C.C.',
+      'D...D'
+    ]),
+    // L8 (6x6)
+    G([
+      'A.....',
+      '..B..A',
+      '......',
+      'C....C',
+      '......',
+      '..B...'
+    ]),
+    // L9 (5x5)
+    G([
+      'A...B',
+      '.C.D.',
+      '.....',
+      '.D.C.',
+      'B...A'
+    ]),
+    // L10 (6x6)
+    G([
+      'A.....',
+      '.B...A',
+      '......',
+      '......',
+      'A...B.',
+      '.....A'
+    ]),
+  ];
+
+  // Build 40 levels by adding rotations and small variations.
+  const levels = [];
+  const clones = (g) => [g, rot90(g), rot90(rot90(g)), rot90(rot90(rot90(g)))];
+  for (const b of base) levels.push(...clones(b));
+  // If more than 40, slice; if less, duplicate first ones.
+  while (levels.length < 40) levels.push(clones(base[0])[levels.length%4]);
+  if (levels.length > 40) levels.length = 40;
+
+  // ======== Game State ========
+  let current = 0;
+  let size = 5;
+  let gridEl = byId('grid');
+  let svgEl = document.querySelector('.svg');
+  let boardEl = byId('board');
+  let paths = {}; // color letter -> array of cells [{r,c}...]
+  let endpoints = {}; // letter -> [{r,c},{r,c}]
+  let letterToColor = {}; // letter -> hex
+  let history = []; // undo stack: {letter, from:{r,c}, to:{r,c}}
+  let active = null; // {letter, r, c}
+
+  // ======== Rendering ========
+  function setupLevel(idx){
+    current = idx;
+    const L = levels[current];
+    size = L.length; // square
+    // Build mapping and endpoints
+    endpoints = {}; paths = {}; letterToColor = {}; history = []; active=null;
+    let letters = new Set();
+    for(let r=0;r<size;r++){
+      for(let c=0;c<size;c++){
+        const ch=L[r][c];
+        if(ch){ letters.add(ch); if(!endpoints[ch]) endpoints[ch]=[]; endpoints[ch].push({r,c}); }
       }
-      board.appendChild(canvas); // makes sure on top
-      for (let r=0;r<6;r++) for (let c=0;c<6;c++) {
-        let d = levels[curLevel][r][c];
-        let div = document.createElement('div');
-        div.className = 'cell';
-        div.dataset.row = r; div.dataset.col = c;
-        if (d>0) {
-          let dot = document.createElement('div');
-          dot.className = 'dot';
-          dot.style.background = colors[d-1];
-          div.appendChild(dot);
+    }
+    const arr=[...letters].sort();
+    arr.forEach((ch,i)=>{ letterToColor[ch]=COLORS[i%COLORS.length]; paths[ch]=[endpoints[ch][0]]; });
+
+    // Grid DOM
+    gridEl.innerHTML=''; svgEl.innerHTML='';
+    gridEl.style.gridTemplateColumns=`repeat(${size},1fr)`;
+    gridEl.style.gridTemplateRows=`repeat(${size},1fr)`;
+    for(let r=0;r<size;r++){
+      for(let c=0;c<size;c++){
+        const cell=document.createElement('div');
+        cell.className='cell'+(((r+c)&1)?' alt':'');
+        cell.dataset.r=r; cell.dataset.c=c;
+        const ch=L[r][c];
+        if(ch){
+          const dot=document.createElement('div');
+          dot.className='dot';
+          dot.style.background=letterToColor[ch];
+          dot.style.border=`2px solid rgba(255,255,255,.6)`;
+          cell.appendChild(dot);
         }
-        div.onmousedown = div.ontouchstart = e => handleStart(e, r, c);
-        div.onmouseenter = div.ontouchmove = e => handleMove(e, r, c);
-        div.onmouseup = div.ontouchend = handleEnd;
-        board.appendChild(div);
-      }
-      // Redraw lines
-      setTimeout(drawLines, 10);
-    }
-
-    function handleStart(e,r,c) {
-      let d = levels[curLevel][r][c];
-      if (d > 0 && !paths.some(p => p[0]==r && p[1]==c))
-        { started = {color:d, path:[[r,c]]}; drawingPath = [[r,c]];}
-    }
-
-    function handleMove(e,r,c) {
-      if (started) {
-        let last = drawingPath[drawingPath.length-1];
-        // Only allow adjacent and not cross itself
-        if (Math.abs(last-r)+Math.abs(last[1]-c)==1 && !drawingPath.some(pt => pt==r && pt[1]==c)) {
-          drawingPath.push([r,c]);
-          drawLines();
-          // If matches end dot
-          if (levels[curLevel][r][c]==started.color && drawingPath.length>1) {
-              // Check end
-              paths.push(drawingPath.slice());
-              started = null; drawingPath=[];
-              checkComplete();
-          }
-        }
+        gridEl.appendChild(cell);
       }
     }
-    function handleEnd(e){
-      started = null; drawingPath=[];
-      drawLines();
-    }
+    // Color key
+    const key=document.getElementById('colorKey');
+    key.innerHTML='';
+    arr.forEach(ch=>{
+      const sw=document.createElement('div'); sw.className='swatch'; sw.style.background=letterToColor[ch];
+      const label=document.createElement('span'); label.textContent=' '+ch;
+      const wrap=document.createElement('span'); wrap.appendChild(sw); wrap.appendChild(label); key.appendChild(wrap);
+    });
 
-    function drawLines() {
-      ctx.clearRect(0,0,300,300);
-      paths.forEach((path,i)=>{
-        ctx.strokeStyle = colors[levels[curLevel][path][path[1]]-1];
-        ctx.lineWidth = 10;
-        ctx.beginPath();
-        path.forEach(([r,c],i)=>{
-          let x = c*50+25, y = r*50+25;
-          i ? ctx.lineTo(x,y): ctx.moveTo(x,y);
-        });
-        ctx.stroke();
-      });
-      if (drawingPath.length>1) {
-        ctx.strokeStyle = colors[started.color-1];
-        ctx.lineWidth = 6;
-        ctx.beginPath();
-        drawingPath.forEach(([r,c],i)=>{
-          let x = c*50+25, y = r*50+25;
-          i ? ctx.lineTo(x,y): ctx.moveTo(x,y);
-        });
-        ctx.stroke();
+    byId('levelNum').textContent = (current+1);
+    drawAll();
+  }
+
+  function cellCenter(r,c){
+    const pad=10; const gap=6; const w=1000-2*pad; // svg viewbox units
+    const cell = (w - gap*(size-1)) / size; // side
+    const x = pad + c*(cell+gap) + cell/2;
+    const y = pad + r*(cell+gap) + cell/2;
+    return {x,y,cell};
+  }
+
+  function drawPath(letter){
+    // Remove old
+    const old = svgEl.querySelector(`path[data-letter="${letter}"]`);
+    if(old) old.remove();
+    const pts = paths[letter]; if(!pts || pts.length<1) return;
+    const {cell} = cellCenter(0,0);
+    const radius = Math.max(6, Math.min(22, cell*0.18));
+    let d='';
+    for(let i=0;i<pts.length;i++){
+      const {x,y}=cellCenter(pts[i].r, pts[i].c);
+      d += (i? ' L':'M')+x+','+y;
+    }
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d', d);
+    path.setAttribute('data-letter', letter);
+    path.setAttribute('fill','none');
+    path.setAttribute('stroke', letterToColor[letter]);
+    path.setAttribute('stroke-width', radius);
+    path.setAttribute('stroke-linecap','round');
+    path.setAttribute('stroke-linejoin','round');
+    path.style.filter='drop-shadow(0 2px 2px rgba(0,0,0,.35))';
+    svgEl.appendChild(path);
+  }
+
+  function drawAll(){
+    svgEl.innerHTML='';
+    Object.keys(paths).forEach(drawPath);
+  }
+
+  // ======== Logic ========
+  function inside(r,c){ return r>=0 && c>=0 && r<size && c<size; }
+
+  function occupied(r,c){
+    // return letter occupying (r,c) via a path (not counting starting endpoints as blocking for self)
+    for(const L of Object.keys(paths)){
+      const pts=paths[L];
+      for(let i=0;i<pts.length;i++) if(pts[i].r===r && pts[i].c===c) return L;
+    }
+    return null;
+  }
+
+  function isEndpoint(letter, r, c){
+    const e=endpoints[letter];
+    return (e && ((e[0].r===r&&e[0].c===c) || (e[1].r===r&&e[1].c===c)));
+  }
+
+  function canStep(letter, r, c){
+    if(!inside(r,c)) return false;
+    const ch = levels[current][r][c];
+    const occ = occupied(r,c);
+    if(occ && occ!==letter) return false; // cannot cross other path
+    if(ch && ch!==letter) return false;   // cannot enter other color endpoint
+    // ok to go over own start/endpoints and existing own path (it will trim)
+    return true;
+  }
+
+  function stepTo(letter, r, c){
+    const pts = paths[letter];
+    const last = pts[pts.length-1];
+    if(last.r===r && last.c===c) return; // same
+    // If stepping onto own body, trim back to that index
+    let existingIndex = pts.findIndex(p=>p.r===r&&p.c===c);
+    if(existingIndex>=0){ pts.length = existingIndex+1; drawPath(letter); return; }
+    // Otherwise push new step if adjacent
+    if(Math.abs(last.r-r)+Math.abs(last.c-c)!==1) return; // only orthogonal one-step
+    if(!canStep(letter,r,c)) return;
+    pts.push({r,c});
+    history.push({letter, to:{r,c}});
+    drawPath(letter);
+    checkWin();
+  }
+
+  function startDragFrom(r,c){
+    const ch = levels[current][r][c];
+    let letter = ch;
+    if(!letter){ // start from existing path tail if any
+      for(const L of Object.keys(paths)){
+        const pts=paths[L];
+        const tail=pts[pts.length-1];
+        if(tail.r===r && tail.c===c){ letter=L; break; }
       }
     }
+    if(!letter) return;
 
-    function checkComplete() {
-      let filled = Array.from({length:6},()=>Array(6).fill(0));
-      paths.forEach(path=>path.forEach(([r,c])=>filled[r][c]=1));
-      // All pairs must be connected and board filled by lines or dots
-      let allDotsConnected = true, allFilled = true;
-      for (let r=0;r<6;r++) for (let c=0;c<6;c++) {
-        if (levels[curLevel][r][c]>0) {
-          const dot = [r,c], color = levels[curLevel][r][c];
-          if (!paths.some(p => (p[0]==r && p[1]==c)||(p[p.length-1]==r && p[p.length-1][1]==c))) {
-            allDotsConnected = false;
-          }
-        }
-        if (levels[curLevel][r][c]==0 && !filled[r][c]) allFilled = false;
-      }
-      if (allDotsConnected && allFilled) {
-        nextbtn.style.display = 'inline-block';
-      }
+    // If starting from an endpoint, reset that path to start from that endpoint.
+    const e=endpoints[letter];
+    if(e && (e[0].r===r&&e[0].c===c || e[1].r===r&&e[1].c===c)) paths[letter]=[{r,c}];
+
+    active = {letter, r, c};
+  }
+
+  function endDrag(){ active=null; }
+
+  function checkWin(){
+    // win when each letter's path touches both endpoints
+    for(const L of Object.keys(endpoints)){
+      const pts=paths[L];
+      const e=endpoints[L];
+      if(!pts) return false;
+      const has0 = pts.some(p=>p.r===e[0].r&&p.c===e[0].c);
+      const has1 = pts.some(p=>p.r===e[1].r&&p.c===e[1].c);
+      if(!(has0&&has1)) return false;
     }
+    toast('Great! Level complete 🎉');
+    setTimeout(()=>{
+      if(current<levels.length-1){ setupLevel(current+1); updateSelect(); }
+    }, 400);
+    return true;
+  }
 
-    function nextLevel() {
-      curLevel = (curLevel+1)%levels.length;
-      levelH.textContent = 'Level '+(curLevel+1);
-      drawBoard();
+  function resetLevel(){ setupLevel(current); }
+  function undo(){
+    // pop last history until color changes from last event to keep it intuitive
+    if(!history.length) return;
+    const lastColor = history[history.length-1].letter;
+    while(history.length && history[history.length-1].letter===lastColor){
+      const h=history.pop();
+      const pts=paths[h.letter];
+      if(pts && pts.length>1) pts.pop();
     }
+    drawAll();
+  }
 
-    levelH.textContent = 'Level 1';
-    drawBoard();
-  </script>
-</body>
+  // ======== Input Handling (mouse + touch) ========
+  function posToCell(x,y){
+    const rect = gridEl.getBoundingClientRect();
+    const gx = (x-rect.left)/rect.width; const gy = (y-rect.top)/rect.height;
+    if(gx<0||gy<0||gx>1||gy>1) return null;
+    const c = Math.floor(gx*size); const r = Math.floor(gy*size); return {r,c};
+  }
+
+  function moveAt(x,y){ if(!active) return; const cell=posToCell(x,y); if(!cell) return; stepTo(active.letter, cell.r, cell.c); }
+
+  gridEl.addEventListener('pointerdown', e=>{ e.preventDefault(); gridEl.setPointerCapture(e.pointerId); const cell=posToCell(e.clientX,e.clientY); if(!cell) return; startDragFrom(cell.r,cell.c); });
+  gridEl.addEventListener('pointermove', e=>{ moveAt(e.clientX,e.clientY); });
+  gridEl.addEventListener('pointerup', e=>{ endDrag(); gridEl.releasePointerCapture(e.pointerId); });
+  gridEl.addEventListener('pointerleave', endDrag);
+
+  // ======== UI Controls ========
+  const sel = byId('levelSelect');
+  function buildSelect(){ sel.innerHTML=''; for(let i=0;i<levels.length;i++){ const o=document.createElement('option'); o.value=i; o.textContent=`Level ${i+1}`; sel.appendChild(o);} }
+  function updateSelect(){ sel.value = current; byId('levelNum').textContent=current+1; }
+  byId('prevBtn').onclick=()=>{ if(current>0){ setupLevel(current-1); updateSelect(); }};
+  byId('nextBtn').onclick=()=>{ if(current<levels.length-1){ setupLevel(current+1); updateSelect(); }};
+  byId('resetBtn').onclick=resetLevel;
+  byId('undoBtn').onclick=undo;
+  sel.onchange=()=>{ setupLevel(parseInt(sel.value,10)); };
+
+  // ======== Kickoff ========
+  buildSelect();
+  byId('levelTotal').textContent = levels.length;
+  setupLevel(0);
+  updateSelect();
+})();
+</script></body>
 </html>
