@@ -1,405 +1,551 @@
 <!DOCTYPE html><html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Dot Line – Connect Same Color (40 Levels)</title>
-<style>
-  :root{
-    --bg:#0f1220;--panel:#151933;--tile:#1d2247;--tile-alt:#202657;--text:#e9ecff;--muted:#aeb6ff;--accent:#7c9aff;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;background:linear-gradient(180deg,#0b0e1a,#13162d 40%,#0b0e1a);color:var(--text);display:flex;align-items:center;justify-content:center}
-  .wrap{width:min(96vw,900px);}
-  header{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:10px}
-  h1{font-size:20px;margin:0;font-weight:700;letter-spacing:.3px}
-  .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-  button, select{background:var(--panel);color:var(--text);border:1px solid #2a2f66;border-radius:12px;padding:10px 14px;font-weight:600;cursor:pointer;transition:.2s;box-shadow:0 4px 12px rgba(0,0,0,.25)}
-  button:hover{transform:translateY(-1px)}
-  button:disabled{opacity:.4;cursor:not-allowed}
-  .board-wrap{background:var(--panel);padding:14px;border-radius:18px;box-shadow:0 12px 28px rgba(0,0,0,.35)}
-  .board{position:relative;aspect-ratio:1/1;width:min(92vw,720px);max-height:72vh;margin:auto;border-radius:14px;overflow:hidden}
-  .grid{position:absolute;inset:0;display:grid;gap:6px;padding:10px}
-  .cell{background:var(--tile);border-radius:12px;position:relative;touch-action:none}
-  .cell.alt{background:var(--tile-alt)}
-  .dot{position:absolute;inset:12%;border-radius:50%;box-shadow:0 4px 10px rgba(0,0,0,.35), inset 0 -3px 0 rgba(0,0,0,.2)}
-  .svg{position:absolute;inset:0;pointer-events:none}
-  .hud{display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding:0 4px;color:var(--muted);font-size:14px}
-  .pill{background:#101438;border:1px solid #28307a;border-radius:999px;padding:6px 10px}
-  .color-key{display:flex;gap:6px;flex-wrap:wrap}
-  .swatch{width:14px;height:14px;border-radius:3px;border:1px solid rgba(255,255,255,.5)}
-  .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#11173a;border:1px solid #3140a8;color:#fff;padding:10px 14px;border-radius:999px;opacity:0;pointer-events:none;transition:.35s}
-  .toast.show{opacity:1}
-  @media (max-width:520px){
-    h1{font-size:18px}
-    button,select{padding:9px 12px}
-    .board{max-height:68vh}
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Indian Recipes • Single‑Page HTML App</title>
+  <style>
+    :root{
+      --bg:#0f1220; --card:#151936; --muted:#aab2d5; --text:#e7ebff; --brand:#6c79ff; --brand-2:#ff6cc8;
+      --good:#35d07f; --warn:#ffd166; --chip:#20264f; --chip-b:#2a3170; --shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 600px at 10% -10%, rgba(108,121,255,.25), transparent),
+                  radial-gradient(900px 500px at 120% 10%, rgba(255,108,200,.20), transparent),
+                  var(--bg);
+      color:var(--text);
+    }
+    header{
+      position:sticky; top:0; z-index:5; backdrop-filter:saturate(1.2) blur(10px);
+      background:linear-gradient(180deg, rgba(15,18,32,.9), rgba(15,18,32,.6)); border-bottom:1px solid #262b55;
+    }
+    .wrap{max-width:1200px; margin:0 auto; padding:20px}
+    .title{
+      display:flex; gap:16px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+    }
+    h1{margin:0; font-size: clamp(20px, 1.8rem, 48px); letter-spacing:.3px}
+    .subtitle{color:var(--muted); font-size:.95rem}
+    .controls{
+      margin-top:14px; display:grid; grid-template-columns: 1fr repeat(4, minmax(140px, 190px)); gap:10px; align-items:center;
+    }
+    input[type="search"], select{
+      width:100%; padding:12px 14px; border-radius:14px; border:1px solid #2a2f66; background:#121630; color:var(--text);
+      outline:none; box-shadow: inset 0 0 0 1px transparent; transition:.2s ease; font-size:15px;
+    }
+    input[type="search"]:focus, select:focus{ box-shadow: inset 0 0 0 1px var(--brand) }
+    .chips{ display:flex; gap:8px; flex-wrap:wrap; margin-top:8px }
+    .chip{ background: linear-gradient(180deg, var(--chip), var(--chip-b)); color:#cfd6ff; border:1px solid #2e3578; padding:6px 10px; border-radius:999px; font-size:.85rem; cursor:pointer; user-select:none }
+    .chip.active{ outline:2px solid var(--brand); color:#fff }main{ padding:18px 0 40px }
+.grid{ display:grid; grid-template-columns: repeat( auto-fill, minmax(260px, 1fr)); gap:16px }
+.card{
+  background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02)); border:1px solid #252b58;
+  border-radius:18px; padding:14px; box-shadow: var(--shadow); position:relative; overflow:hidden;
+}
+.ribbon{position:absolute; top:12px; right:-8px; background:linear-gradient(120deg, var(--brand), var(--brand-2)); color:#fff; padding:6px 14px; border-radius:999px; font-size:.72rem; transform:rotate(10deg)}
+.card h3{margin:6px 0 4px; font-size:1.1rem}
+.meta{ display:flex; align-items:center; gap:10px; color:#c8cdf5; font-size:.86rem; flex-wrap:wrap }
+.dot{ width:8px; height:8px; border-radius:50%; background:var(--good); display:inline-block }
+.nonveg{ background:#ff5c63 }
+.badge{ padding:4px 8px; border:1px solid #333a7a; border-radius:999px; font-size:.72rem }
+.spice{letter-spacing:1px}
+.card .tags{ margin-top:10px; display:flex; gap:6px; flex-wrap:wrap }
+.tag{ background:#18204a; color:#c6ccff; padding:4px 8px; border-radius:8px; font-size:.72rem; border:1px solid #2a3274 }
+.actions{ display:flex; gap:8px; margin-top:12px }
+button{ cursor:pointer; border:1px solid #323975; background:#111537; color:#e8ebff; padding:8px 10px; border-radius:12px; font-weight:600 }
+button:hover{ filter:brightness(1.1) }
+.ghost{ background:transparent }
+.like{ border-color:#3c8d62 }
+.danger{ border-color:#7e344e }
+
+.empty{ text-align:center; color:#b8bfe9; padding:40px; border:1px dashed #2e3577; border-radius:16px; background:rgba(255,255,255,.02) }
+
+/* Modal */
+dialog{ width:min(860px, 95vw); border:none; border-radius:18px; padding:0; overflow:hidden; background:#0f1433; color:#eef0ff; box-shadow: var(--shadow) }
+dialog::backdrop{ background: rgba(2,6,23,.72) }
+.modalHead{ display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid #2a3170; background:linear-gradient(180deg,#121741,#0e1335) }
+.modalBody{ display:grid; grid-template-columns: 1.2fr 1fr; gap:18px; padding:18px }
+.modalBody h4{ margin:6px 0 }
+.section{ background:#0b1030; padding:12px 14px; border:1px solid #242b67; border-radius:14px }
+ol, ul{ margin:8px 0 0 18px }
+.modalFoot{ display:flex; gap:10px; padding:14px 18px; border-top:1px solid #2a3170; background:#0d1231; justify-content:flex-end }
+
+/* Footer */
+footer{ border-top:1px solid #262b55; color:#aeb6e9; padding:18px; text-align:center; font-size:.9rem }
+
+/* Responsive */
+@media (max-width:820px){ .controls{ grid-template-columns: 1fr 1fr 1fr; } .modalBody{ grid-template-columns:1fr } }
+@media (max-width:540px){ .controls{ grid-template-columns:1fr 1fr; } }
+
+  </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <h1>Dot Line – Connect Same Color</h1>
-      <div class="controls">
-        <button id="prevBtn" title="Previous level">◀</button>
-        <select id="levelSelect" title="Choose level"></select>
-        <button id="nextBtn" title="Next level">▶</button>
-        <button id="resetBtn" title="Reset level">Reset</button>
-        <button id="undoBtn" title="Undo last move">Undo</button>
+  <header>
+    <div class="wrap">
+      <div class="title">
+        <div>
+          <h1>🍛 Indian Recipes</h1>
+          <div class="subtitle">Search • Filter • Save favourites • Print or copy ingredients. All offline in one HTML file.</div>
+        </div>
+        <div class="chips" id="quickChips"></div>
       </div>
-    </header><div class="board-wrap">
-  <div id="board" class="board">
-    <svg class="svg" viewBox="0 0 1000 1000" preserveAspectRatio="none"></svg>
+      <div class="controls">
+        <input id="q" type="search" placeholder="Search dishes, ingredients… (e.g., paneer, biryani, dosa)" aria-label="Search recipes" />
+        <select id="course">
+          <option value="">All Courses</option>
+          <option>Breakfast</option>
+          <option>Main</option>
+          <option>Snack</option>
+          <option>Bread</option>
+          <option>Rice</option>
+          <option>Dessert</option>
+          <option>Beverage</option>
+        </select>
+        <select id="diet">
+          <option value="">Diet: Any</option>
+          <option>Veg</option>
+          <option>Non-Veg</option>
+          <option>Vegan</option>
+        </select>
+        <select id="region">
+          <option value="">Region: Any</option>
+          <option>North</option>
+          <option>South</option>
+          <option>East</option>
+          <option>West</option>
+          <option>Coastal</option>
+          <option>Pan-India</option>
+        </select>
+        <select id="sort">
+          <option value="az">Sort: A → Z</option>
+          <option value="time">Sort: Cooking Time</option>
+          <option value="spice">Sort: Spice Level</option>
+          <option value="popular">Sort: Popular</option>
+        </select>
+      </div>
+    </div>
+  </header>  <main class="wrap">
     <div class="grid" id="grid"></div>
-  </div>
-  <div class="hud">
-    <div class="pill">Level <span id="levelNum">1</span> / <span id="levelTotal">40</span></div>
-    <div class="color-key" id="colorKey"></div>
-  </div>
-</div>
+    <div id="empty" class="empty" hidden>No dishes match your filters. Try clearing a filter or search term.</div>
+  </main>  <footer>
+    Made with ❤️ – Works offline. Tip: Tap ★ on any card to save it; use the “Favourites” chip on top to view them.
+  </footer>  <dialog id="modal">
+    <div class="modalHead">
+      <strong id="mTitle">Recipe</strong>
+      <div style="display:flex; gap:8px">
+        <button id="copyBtn">Copy Ingredients</button>
+        <button id="printBtn">Print</button>
+        <button id="closeBtn" class="ghost">Close</button>
+      </div>
+    </div>
+    <div class="modalBody">
+      <section class="section">
+        <h4>Ingredients</h4>
+        <ul id="mIngr"></ul>
+        <h4>Notes</h4>
+        <div id="mNotes" class="subtitle"></div>
+      </section>
+      <section class="section">
+        <h4>Steps</h4>
+        <ol id="mSteps"></ol>
+      </section>
+    </div>
+    <div class="modalFoot">
+      <span class="subtitle" id="mMeta"></span>
+    </div>
+  </dialog>  <script>
+    // --- Data ---------------------------------------------------------------
+    const RECIPES = [
+      // Breakfast
+      R({name:'Masala Dosa', course:'Breakfast', region:'South', diet:'Veg', time:40, spice:3, popular:10,
+        tags:['Fermented','Crispy','Udupi'],
+        ingredients:['2 cups dosa batter','1 tbsp oil','1 tsp mustard seeds','1 onion, sliced','1-2 green chilies, chopped','1/2 tsp turmeric','4 boiled potatoes, crumbled','Salt','Coriander','Ghee (optional)'],
+        steps:['Spread batter on hot tawa; drizzle oil/ghee.','Crackle mustard; sauté onion & chilies.','Add turmeric, potatoes, salt; mash.','Crisp dosa, fill with masala, fold & serve with sambar & chutney.'],
+        notes:'Ferment batter overnight for best flavor.'
+      }),
+      R({name:'Idli with Sambar', course:'Breakfast', region:'South', diet:'Veg', time:45, spice:2, popular:9,
+        tags:['Steamed','Light'],
+        ingredients:['2 cups idli batter','For sambar: toor dal 1/2 cup','Tamarind','Sambar powder 2 tsp','Mixed veg','Mustard seeds','Curry leaves'],
+        steps:['Steam idlis 10-12 mins.','Pressure cook dal; add veggies & sambar powder.','Finish with tamarind & tempering.'],
+        notes:'Grease molds for easy release.'
+      }),
+      R({name:'Poha', course:'Breakfast', region:'West', diet:'Veg', time:15, spice:2, popular:10,
+        tags:['Quick','Light'],
+        ingredients:['2 cups thick poha (flattened rice)','1 onion','1 potato (optional)','1/4 cup peanuts','Mustard seeds','Curry leaves','Turmeric','Lemon','Coriander'],
+        steps:['Rinse poha; rest 5 mins.','Tempering with mustard, curry leaves; sauté onion/potato.','Add turmeric, poha, peanuts, salt; toss.','Finish with lemon & coriander.']
+      }),
+      R({name:'Upma', course:'Breakfast', region:'South', diet:'Veg', time:20, spice:1, popular:8,
+        tags:['Semolina','Comfort'],
+        ingredients:['1 cup rava/sooji','2.5 cups water','1 onion','Green chilies','Mustard & urad dal','Curry leaves','Ghee/Oil','Salt'],
+        steps:['Dry roast rava.','Tempering; sauté onions & chilies.','Add water & salt; boil.','Rain in rava, stir till fluffy.']
+      }),
 
-  </div>  <div id="toast" class="toast">Great! Level complete 🎉</div><script>
-(() => {
-  // ======== Utility ========
-  const COLORS = [
-    '#ff4d4d', '#4dd0ff', '#ffd24d', '#8dff4d', '#b84dff', '#ff7ab2', '#56ffbd', '#ffa64d', '#6e9bff'
-  ];
-  const DIRS = [[1,0],[-1,0],[0,1],[0,-1]];
-  const byId = id => document.getElementById(id);
-  const toast = (msg) => { const t=byId('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 1400); };
+      // Mains – Veg
+      R({name:'Paneer Butter Masala', course:'Main', region:'North', diet:'Veg', time:35, spice:2, popular:10,
+        tags:['Creamy','Restaurant‑style'],
+        ingredients:['200g paneer cubes','2 tomatoes','1 onion','1 tsp ginger‑garlic paste','Butter & cream','Cashews 10','Kashmiri chili 1 tsp','Garam masala 1/2 tsp'],
+        steps:['Sauté onion & tomatoes with cashews; blend smooth.','Cook paste with butter & spices.','Add cream & paneer; simmer 3–4 mins.']
+      }),
+      R({name:'Chana Masala', course:'Main', region:'North', diet:'Vegan', time:40, spice:3, popular:9,
+        tags:['Protein‑rich','Punjabi'],
+        ingredients:['2 cups cooked chickpeas','Onion, tomato','Ginger‑garlic','Chana masala 2 tsp','Tea bag (optional)','Kasuri methi'],
+        steps:['Pressure cook chickpeas (with tea bag for color).','Sauté onion‑tomato masala with spice mix.','Add chickpeas; simmer till thick; finish with methi.']
+      }),
+      R({name:'Dal Tadka', course:'Main', region:'North', diet:'Vegan', time:30, spice:2, popular:9,
+        tags:['Comfort','Everyday'],
+        ingredients:['1/2 cup toor dal + 1/4 cup moong','Turmeric','Onion, tomato','Cumin','Garlic','Ghee/Oil','Red chili'],
+        steps:['Pressure cook dal with haldi.','Mash; add sautéed onion‑tomato.','Pour hot tadka with cumin & garlic.']
+      }),
+      R({name:'Rajma Masala', course:'Main', region:'North', diet:'Vegan', time:50, spice:2, popular:8,
+        tags:['Kidney beans','Comfort'],
+        ingredients:['2 cups cooked rajma','Onion‑tomato masala','Ginger‑garlic','Rajma masala 2 tsp','Butter (optional)'],
+        steps:['Cook rajma till soft.','Slow‑simmer in masala 15–20 mins for depth.']
+      }),
+      R({name:'Palak Paneer', course:'Main', region:'North', diet:'Veg', time:30, spice:2, popular:9,
+        tags:['Spinach','Iron‑rich'],
+        ingredients:['200g paneer','2 cups blanched spinach','Onion','Ginger‑garlic','Green chili','Garam masala','Cream (optional)'],
+        steps:['Blanch & blend spinach.','Sauté aromatics; add puree & spices.','Add paneer; finish with cream.']
+      }),
+      R({name:'Kadhi Pakora', course:'Main', region:'North', diet:'Veg', time:45, spice:2, popular:7,
+        tags:['Yogurt curry'],
+        ingredients:['Curd 1.5 cups','Besan 3 tbsp','Turmeric','Kasuri methi','Pakora batter: besan, onion, chili','Tadka: mustard, fenugreek, curry leaves'],
+        steps:['Whisk curd+besan+water; simmer with spices.','Fry pakoras; add to kadhi.','Temper & serve with rice.']
+      }),
+      R({name:'Aloo Gobi', course:'Main', region:'North', diet:'Vegan', time:25, spice:2, popular:8,
+        tags:['Dry sabzi'],
+        ingredients:['Cauliflower florets','Potatoes','Turmeric','Cumin','Ginger','Garam masala','Coriander'],
+        steps:['Sauté cumin & ginger.','Add potatoes, then gobi with spices; cook covered.']
+      }),
 
-  // ======== Level Definitions ========
-  // Levels are 5x5–7x7 boards. Each entry is a matrix of letters A..I for color pairs; 0 for empty.
-  // Win condition: connect all like letters with non-overlapping orthogonal paths.
-  // (Grid fill is NOT required – makes level design simpler and mobile-friendly.)
+      // Mains – Non-Veg
+      R({name:'Butter Chicken', course:'Main', region:'North', diet:'Non-Veg', time:45, spice:2, popular:10,
+        tags:['Murgh Makhani','Creamy'],
+        ingredients:['500g chicken tikka pieces','Tomato puree','Butter & cream','Cashews','Kashmiri chili','Garam masala'],
+        steps:['Grill or pan‑sear marinated chicken.','Cook makhani gravy; add chicken; simmer till silky.']
+      }),
+      R({name:'Chicken Biryani (Hyderabadi)', course:'Rice', region:'South', diet:'Non-Veg', time:60, spice:4, popular:10,
+        tags:['Dum','Aromatic'],
+        ingredients:['500g chicken in biryani marinade','2 cups basmati rice','Whole spices','Fried onions','Mint & coriander','Ghee','Saffron milk'],
+        steps:['Parboil rice with spices.','Layer marinated chicken, rice, fried onions, herbs, saffron.','Seal & dum 30–35 mins.']
+      }),
+      R({name:'Rogan Josh', course:'Main', region:'North', diet:'Non-Veg', time:55, spice:3, popular:8,
+        tags:['Kashmiri'],
+        ingredients:['500g mutton','Yogurt','Kashmiri chili','Fennel & dry ginger powder','Whole spices'],
+        steps:['Brown mutton; add yogurt‑spice mix.','Slow cook till tender and red‑hued.']
+      }),
+      R({name:'Goan Fish Curry', course:'Main', region:'Coastal', diet:'Non-Veg', time:30, spice:3, popular:8,
+        tags:['Coconut','Tangy'],
+        ingredients:['500g firm fish','Coconut & red chili paste','Tamarind or kokum','Mustard seeds','Curry leaves'],
+        steps:['Blend masala.','Simmer curry; add fish; cook 6–8 mins.']
+      }),
+      R({name:'Egg Curry', course:'Main', region:'Pan-India', diet:'Non-Veg', time:30, spice:2, popular:8,
+        tags:['Budget','Quick'],
+        ingredients:['6 boiled eggs','Onion‑tomato masala','Ginger‑garlic','Garam masala'],
+        steps:['Score eggs & sear lightly.','Simmer in masala 8–10 mins.']
+      }),
 
-  function rot90(grid){ // rotate clockwise
-    const n=grid.length,m=grid[0].length; const out=Array.from({length:m},()=>Array(n).fill(0));
-    for(let r=0;r<n;r++) for(let c=0;c<m;c++) out[c][n-1-r]=grid[r][c];
-    return out;
-  }
-  const G = (rows) => rows.map(r=>r.split('').map(ch=>ch==='.'?0:ch));
+      // Breads
+      R({name:'Garlic Naan (Tawa)', course:'Bread', region:'North', diet:'Veg', time:40, spice:0, popular:9,
+        tags:['Leavened'],
+        ingredients:['2 cups maida','Curd 1/3 cup','Baking powder 1 tsp','Sugar 1 tsp','Salt','Garlic & coriander','Ghee/Butter'],
+        steps:['Make soft dough; rest 1 hr.','Roll tear‑drop; press garlic‑coriander.','Cook on hot tawa; brush butter.']
+      }),
+      R({name:'Tawa Roti/Phulka', course:'Bread', region:'Pan-India', diet:'Vegan', time:25, spice:0, popular:8,
+        tags:['Everyday'],
+        ingredients:['2 cups atta','Water','Salt (optional)'],
+        steps:['Knead soft dough; rest 20 mins.','Roll thin; cook on tawa; puff on flame.']
+      }),
+      R({name:'Aloo Paratha', course:'Bread', region:'North', diet:'Veg', time:35, spice:2, popular:9,
+        tags:['Stuffed'],
+        ingredients:['Atta dough','Mashed spiced potato','Ghee','Pickle (to serve)'],
+        steps:['Stuff potato into small dough ball.','Roll gently; roast with ghee both sides.']
+      }),
 
-  // Base pack of 10 hand-made solvable layouts (5x5 & 6x6), then we add rotated variants to reach 40.
-  const base = [
-    // L1 (5x5) – gentle
-    G([
-      'A...B',
-      '.C...',
-      '..C..',
-      '...D.',
-      'B..DA'
-    ]),
-    // L2 (5x5)
-    G([
-      'A...A',
-      '..B..',
-      '.....',
-      '..B..',
-      'C...C'
-    ]),
-    // L3 (5x5)
-    G([
-      'A...B',
-      '.A...',
-      '.....',
-      '...B.',
-      'C...C'
-    ]),
-    // L4 (6x6)
-    G([
-      'A....B',
-      '.C..C.',
-      '......',
-      '.D..D.',
-      '......',
-      'B....A'
-    ]),
-    // L5 (5x5)
-    G([
-      'A.B..',
-      '.....',
-      '..C..',
-      '.....',
-      '..B.A'
-    ]),
-    // L6 (6x6)
-    G([
-      'A....B',
-      '......',
-      '.C..C.',
-      '......',
-      '.D..D.',
-      'B....A'
-    ]),
-    // L7 (5x5)
-    G([
-      'A...A',
-      '.B.B.',
-      '.....',
-      '.C.C.',
-      'D...D'
-    ]),
-    // L8 (6x6)
-    G([
-      'A.....',
-      '..B..A',
-      '......',
-      'C....C',
-      '......',
-      '..B...'
-    ]),
-    // L9 (5x5)
-    G([
-      'A...B',
-      '.C.D.',
-      '.....',
-      '.D.C.',
-      'B...A'
-    ]),
-    // L10 (6x6)
-    G([
-      'A.....',
-      '.B...A',
-      '......',
-      '......',
-      'A...B.',
-      '.....A'
-    ]),
-  ];
+      // Rice & One‑pots
+      R({name:'Veg Biryani', course:'Rice', region:'Pan-India', diet:'Veg', time:55, spice:3, popular:9,
+        tags:['Dum','Festive'],
+        ingredients:['Mixed vegetables','2 cups basmati rice','Biryani masala','Fried onions','Mint & coriander','Saffron milk','Ghee'],
+        steps:['Parboil rice.','Layer veggies & rice with herbs and saffron.','Dum cook 25–30 mins.']
+      }),
+      R({name:'Jeera Rice', course:'Rice', region:'North', diet:'Vegan', time:15, spice:1, popular:8,
+        tags:['Everyday'],
+        ingredients:['1 cup basmati','Cumin 1 tsp','Ghee/Oil','Bay leaf'],
+        steps:['Temper cumin.','Add cooked rice; toss aromatic.']
+      }),
+      R({name:'Lemon Rice', course:'Rice', region:'South', diet:'Vegan', time:15, spice:1, popular:8,
+        tags:['Tart','Lunchbox'],
+        ingredients:['Cooked rice 3 cups','Mustard & urad dal','Curry leaves','Peanuts','Turmeric','Lemon juice'],
+        steps:['Make tempering with nuts & spices.','Mix into rice; finish with lemon.']
+      }),
 
-  // Build 40 levels by adding rotations and small variations.
-  const levels = [];
-  const clones = (g) => [g, rot90(g), rot90(rot90(g)), rot90(rot90(rot90(g)))];
-  for (const b of base) levels.push(...clones(b));
-  // If more than 40, slice; if less, duplicate first ones.
-  while (levels.length < 40) levels.push(clones(base[0])[levels.length%4]);
-  if (levels.length > 40) levels.length = 40;
+      // Snacks & Street food
+      R({name:'Samosa', course:'Snack', region:'North', diet:'Veg', time:60, spice:3, popular:10,
+        tags:['Crispy','Street'],
+        ingredients:['Maida dough','Spiced potato‑pea filling','Ajwain','Oil for fry'],
+        steps:['Make stiff dough.','Fill cones with masala.','Fry low‑medium till blistered.']
+      }),
+      R({name:'Pav Bhaji', course:'Snack', region:'West', diet:'Veg', time:35, spice:3, popular:10,
+        tags:['Mumbai','Buttery'],
+        ingredients:['Mixed veggies','Onion‑tomato','Pav bhaji masala','Butter','Pavs'],
+        steps:['Mash veggies in masala with butter.','Toast pav with butter; serve with onions & lemon.']
+      }),
+      R({name:'Vada Pav', course:'Snack', region:'West', diet:'Veg', time:30, spice:3, popular:9,
+        tags:['Street'],
+        ingredients:['Potato vada','Besan batter','Garlic chutney','Pavs'],
+        steps:['Dip vadas; fry crisp.','Assemble in pav with chutneys.']
+      }),
+      R({name:'Pakora (Onion Bhaji)', course:'Snack', region:'Pan-India', diet:'Vegan', time:25, spice:2, popular:8,
+        tags:['Tea‑time'],
+        ingredients:['Onion slices','Besan','Ajwain','Chili & turmeric','Water','Salt'],
+        steps:['Make thick batter; coat onions.','Fry small clusters till crisp.']
+      }),
 
-  // ======== Game State ========
-  let current = 0;
-  let size = 5;
-  let gridEl = byId('grid');
-  let svgEl = document.querySelector('.svg');
-  let boardEl = byId('board');
-  let paths = {}; // color letter -> array of cells [{r,c}...]
-  let endpoints = {}; // letter -> [{r,c},{r,c}]
-  let letterToColor = {}; // letter -> hex
-  let history = []; // undo stack: {letter, from:{r,c}, to:{r,c}}
-  let active = null; // {letter, r, c}
+      // Sambar/Rasam
+      R({name:'Sambar', course:'Main', region:'South', diet:'Vegan', time:40, spice:2, popular:9,
+        tags:['Lentil stew'],
+        ingredients:['Toor dal 1/2 cup','Mixed veg','Tamarind','Sambar powder','Mustard','Curry leaves'],
+        steps:['Cook dal.','Boil veggies with sambar powder.','Combine with tamarind; temper.']
+      }),
+      R({name:'Rasam', course:'Main', region:'South', diet:'Vegan', time:20, spice:2, popular:8,
+        tags:['Peppery','Digestive'],
+        ingredients:['Tomatoes','Tamarind','Rasam powder','Garlic (optional)','Mustard','Curry leaves'],
+        steps:['Boil tamarind‑tomato with spices.','Temper & serve hot.']
+      }),
 
-  // ======== Rendering ========
-  function setupLevel(idx){
-    current = idx;
-    const L = levels[current];
-    size = L.length; // square
-    // Build mapping and endpoints
-    endpoints = {}; paths = {}; letterToColor = {}; history = []; active=null;
-    let letters = new Set();
-    for(let r=0;r<size;r++){
-      for(let c=0;c<size;c++){
-        const ch=L[r][c];
-        if(ch){ letters.add(ch); if(!endpoints[ch]) endpoints[ch]=[]; endpoints[ch].push({r,c}); }
-      }
-    }
-    const arr=[...letters].sort();
-    arr.forEach((ch,i)=>{ letterToColor[ch]=COLORS[i%COLORS.length]; paths[ch]=[endpoints[ch][0]]; });
+      // Desserts
+      R({name:'Gulab Jamun', course:'Dessert', region:'North', diet:'Veg', time:45, spice:0, popular:10,
+        tags:['Festive'],
+        ingredients:['Khoya/milk powder dough','Sugar syrup with cardamom','Rose water'],
+        steps:['Knead soft dough; rest.','Fry on low till brown.','Soak in warm syrup.']
+      }),
+      R({name:'Kheer (Rice Pudding)', course:'Dessert', region:'Pan-India', diet:'Veg', time:45, spice:0, popular:9,
+        tags:['Creamy'],
+        ingredients:['Full‑fat milk 1L','Rice 1/4 cup','Sugar','Cardamom','Nuts'],
+        steps:['Simmer milk & rice till thick.','Sweeten; add cardamom & nuts.']
+      }),
+      R({name:'Jalebi', course:'Dessert', region:'North', diet:'Veg', time:60, spice:0, popular:8,
+        tags:['Crisp','Syrupy'],
+        ingredients:['Fermented maida batter','Sugar syrup','Ghee/Oil'],
+        steps:['Pipe spirals into hot oil.','Fry & dip into syrup.']
+      }),
+      R({name:'Rasgulla', course:'Dessert', region:'East', diet:'Veg', time:60, spice:0, popular:8,
+        tags:['Spongy'],
+        ingredients:['Fresh chenna','Sugar syrup'],
+        steps:['Knead chenna; roll balls.','Boil in syrup till doubled.']
+      }),
+      R({name:'Sooji Halwa (Sheera)', course:'Dessert', region:'North', diet:'Veg', time:20, spice:0, popular:8,
+        tags:['Quick'],
+        ingredients:['Rava 1 cup','Ghee 1/3 cup','Sugar 3/4 cup','Water/Milk 2.5 cups','Cardamom'],
+        steps:['Roast rava in ghee.','Add hot water/milk & sugar; stir till glossy.']
+      }),
 
-    // Grid DOM
-    gridEl.innerHTML=''; svgEl.innerHTML='';
-    gridEl.style.gridTemplateColumns=`repeat(${size},1fr)`;
-    gridEl.style.gridTemplateRows=`repeat(${size},1fr)`;
-    for(let r=0;r<size;r++){
-      for(let c=0;c<size;c++){
-        const cell=document.createElement('div');
-        cell.className='cell'+(((r+c)&1)?' alt':'');
-        cell.dataset.r=r; cell.dataset.c=c;
-        const ch=L[r][c];
-        if(ch){
-          const dot=document.createElement('div');
-          dot.className='dot';
-          dot.style.background=letterToColor[ch];
-          dot.style.border=`2px solid rgba(255,255,255,.6)`;
-          cell.appendChild(dot);
-        }
-        gridEl.appendChild(cell);
-      }
-    }
-    // Color key
-    const key=document.getElementById('colorKey');
-    key.innerHTML='';
-    arr.forEach(ch=>{
-      const sw=document.createElement('div'); sw.className='swatch'; sw.style.background=letterToColor[ch];
-      const label=document.createElement('span'); label.textContent=' '+ch;
-      const wrap=document.createElement('span'); wrap.appendChild(sw); wrap.appendChild(label); key.appendChild(wrap);
+      // Beverages
+      R({name:'Masala Chai', course:'Beverage', region:'Pan-India', diet:'Veg', time:10, spice:1, popular:10,
+        tags:['Tea'],
+        ingredients:['Water 1 cup','Milk 1/2 cup','Tea leaves 1.5 tsp','Ginger','Cardamom','Sugar'],
+        steps:['Boil water with spices.','Add tea; simmer.','Pour milk; boil once; strain.']
+      }),
+      R({name:'Mango Lassi', course:'Beverage', region:'North', diet:'Veg', time:10, spice:0, popular:8,
+        tags:['Cooling'],
+        ingredients:['Ripe mango 1 cup','Curd 3/4 cup','Sugar/Honey','Cardamom','Ice'],
+        steps:['Blend till creamy; serve chilled.']
+      }),
+    ];
+
+    // Utility to normalize recipe objects with defaults
+    function R(r){ return {id:slug(r.name), servings:r.servings||2, difficulty:r.difficulty||lvl(r.time), notes:r.notes||'', ...r}; }
+    function lvl(t){ if(t<=15) return 'Easy'; if(t<=35) return 'Medium'; return 'Advanced'; }
+    function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+
+    // --- State --------------------------------------------------------------
+    const $ = (sel, el=document) => el.querySelector(sel);
+    const $$ = (sel, el=document) => [...el.querySelectorAll(sel)];
+    const grid = $('#grid');
+    const empty = $('#empty');
+    const modal = $('#modal');
+    const quickChips = $('#quickChips');
+
+    const state = {
+      q:'', course:'', diet:'', region:'', sort:'az', favourites: new Set(JSON.parse(localStorage.getItem('favs')||'[]'))
+    };
+
+    // --- Render Controls ----------------------------------------------------
+    const chips = [
+      {key:'fav', label:'Favourites ★'},
+      {key:'veg', label:'Veg'},
+      {key:'nonveg', label:'Non‑Veg'},
+      {key:'quick', label:'≤ 20 min'},
+      {key:'breakfast', label:'Breakfast'},
+      {key:'snack', label:'Snacks'},
+      {key:'dessert', label:'Desserts'},
+    ];
+
+    chips.forEach(c=>{
+      const b = document.createElement('button');
+      b.className='chip'; b.textContent=c.label; b.dataset.key=c.key;
+      b.addEventListener('click',()=>{ b.classList.toggle('active'); applyFilters(); });
+      quickChips.appendChild(b);
     });
 
-    byId('levelNum').textContent = (current+1);
-    drawAll();
-  }
+    // Controls listeners
+    $('#q').addEventListener('input', e=>{ state.q=e.target.value.trim().toLowerCase(); applyFilters(); });
+    $('#course').addEventListener('change', e=>{ state.course=e.target.value; applyFilters(); });
+    $('#diet').addEventListener('change', e=>{ state.diet=e.target.value; applyFilters(); });
+    $('#region').addEventListener('change', e=>{ state.region=e.target.value; applyFilters(); });
+    $('#sort').addEventListener('change', e=>{ state.sort=e.target.value; applyFilters(); });
 
-  function cellCenter(r,c){
-    const pad=10; const gap=6; const w=1000-2*pad; // svg viewbox units
-    const cell = (w - gap*(size-1)) / size; // side
-    const x = pad + c*(cell+gap) + cell/2;
-    const y = pad + r*(cell+gap) + cell/2;
-    return {x,y,cell};
-  }
+    // --- Filtering & Sorting -----------------------------------------------
+    function applyFilters(){
+      let list = RECIPES.slice();
+      const chipOn = key => $(`.chip[data-key="${key}"]`).classList.contains('active');
 
-  function drawPath(letter){
-    // Remove old
-    const old = svgEl.querySelector(`path[data-letter="${letter}"]`);
-    if(old) old.remove();
-    const pts = paths[letter]; if(!pts || pts.length<1) return;
-    const {cell} = cellCenter(0,0);
-    const radius = Math.max(6, Math.min(22, cell*0.18));
-    let d='';
-    for(let i=0;i<pts.length;i++){
-      const {x,y}=cellCenter(pts[i].r, pts[i].c);
-      d += (i? ' L':'M')+x+','+y;
-    }
-    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
-    path.setAttribute('d', d);
-    path.setAttribute('data-letter', letter);
-    path.setAttribute('fill','none');
-    path.setAttribute('stroke', letterToColor[letter]);
-    path.setAttribute('stroke-width', radius);
-    path.setAttribute('stroke-linecap','round');
-    path.setAttribute('stroke-linejoin','round');
-    path.style.filter='drop-shadow(0 2px 2px rgba(0,0,0,.35))';
-    svgEl.appendChild(path);
-  }
-
-  function drawAll(){
-    svgEl.innerHTML='';
-    Object.keys(paths).forEach(drawPath);
-  }
-
-  // ======== Logic ========
-  function inside(r,c){ return r>=0 && c>=0 && r<size && c<size; }
-
-  function occupied(r,c){
-    // return letter occupying (r,c) via a path (not counting starting endpoints as blocking for self)
-    for(const L of Object.keys(paths)){
-      const pts=paths[L];
-      for(let i=0;i<pts.length;i++) if(pts[i].r===r && pts[i].c===c) return L;
-    }
-    return null;
-  }
-
-  function isEndpoint(letter, r, c){
-    const e=endpoints[letter];
-    return (e && ((e[0].r===r&&e[0].c===c) || (e[1].r===r&&e[1].c===c)));
-  }
-
-  function canStep(letter, r, c){
-    if(!inside(r,c)) return false;
-    const ch = levels[current][r][c];
-    const occ = occupied(r,c);
-    if(occ && occ!==letter) return false; // cannot cross other path
-    if(ch && ch!==letter) return false;   // cannot enter other color endpoint
-    // ok to go over own start/endpoints and existing own path (it will trim)
-    return true;
-  }
-
-  function stepTo(letter, r, c){
-    const pts = paths[letter];
-    const last = pts[pts.length-1];
-    if(last.r===r && last.c===c) return; // same
-    // If stepping onto own body, trim back to that index
-    let existingIndex = pts.findIndex(p=>p.r===r&&p.c===c);
-    if(existingIndex>=0){ pts.length = existingIndex+1; drawPath(letter); return; }
-    // Otherwise push new step if adjacent
-    if(Math.abs(last.r-r)+Math.abs(last.c-c)!==1) return; // only orthogonal one-step
-    if(!canStep(letter,r,c)) return;
-    pts.push({r,c});
-    history.push({letter, to:{r,c}});
-    drawPath(letter);
-    checkWin();
-  }
-
-  function startDragFrom(r,c){
-    const ch = levels[current][r][c];
-    let letter = ch;
-    if(!letter){ // start from existing path tail if any
-      for(const L of Object.keys(paths)){
-        const pts=paths[L];
-        const tail=pts[pts.length-1];
-        if(tail.r===r && tail.c===c){ letter=L; break; }
+      // search
+      if(state.q){
+        list = list.filter(r=> r.name.toLowerCase().includes(state.q) || r.ingredients.join(' ').toLowerCase().includes(state.q));
       }
+      if(state.course) list = list.filter(r=> r.course===state.course);
+      if(state.diet) list = list.filter(r=> r.diet===state.diet);
+      if(state.region) list = list.filter(r=> r.region===state.region);
+
+      if(chipOn('veg')) list = list.filter(r=> r.diet==='Veg' || r.diet==='Vegan');
+      if(chipOn('nonveg')) list = list.filter(r=> r.diet==='Non-Veg');
+      if(chipOn('quick')) list = list.filter(r=> r.time<=20);
+      if(chipOn('breakfast')) list = list.filter(r=> r.course==='Breakfast');
+      if(chipOn('snack')) list = list.filter(r=> r.course==='Snack');
+      if(chipOn('dessert')) list = list.filter(r=> r.course==='Dessert');
+      if(chipOn('fav')) list = list.filter(r=> state.favourites.has(r.id));
+
+      // Sort
+      list.sort((a,b)=>{
+        switch(state.sort){
+          case 'time': return a.time-b.time;
+          case 'spice': return b.spice-a.spice;
+          case 'popular': return b.popular-a.popular;
+          default: return a.name.localeCompare(b.name);
+        }
+      });
+
+      renderCards(list);
     }
-    if(!letter) return;
 
-    // If starting from an endpoint, reset that path to start from that endpoint.
-    const e=endpoints[letter];
-    if(e && (e[0].r===r&&e[0].c===c || e[1].r===r&&e[1].c===c)) paths[letter]=[{r,c}];
+    // --- Cards --------------------------------------------------------------
+    function renderCards(list){
+      grid.innerHTML='';
+      if(!list.length){ empty.hidden=false; return; } else empty.hidden=true;
 
-    active = {letter, r, c};
-  }
-
-  function endDrag(){ active=null; }
-
-  function checkWin(){
-    // win when each letter's path touches both endpoints
-    for(const L of Object.keys(endpoints)){
-      const pts=paths[L];
-      const e=endpoints[L];
-      if(!pts) return false;
-      const has0 = pts.some(p=>p.r===e[0].r&&p.c===e[0].c);
-      const has1 = pts.some(p=>p.r===e[1].r&&p.c===e[1].c);
-      if(!(has0&&has1)) return false;
+      const frag = document.createDocumentFragment();
+      list.forEach(r=> frag.appendChild(card(r)) );
+      grid.appendChild(frag);
     }
-    toast('Great! Level complete 🎉');
-    setTimeout(()=>{
-      if(current<levels.length-1){ setupLevel(current+1); updateSelect(); }
-    }, 400);
-    return true;
-  }
 
-  function resetLevel(){ setupLevel(current); }
-  function undo(){
-    // pop last history until color changes from last event to keep it intuitive
-    if(!history.length) return;
-    const lastColor = history[history.length-1].letter;
-    while(history.length && history[history.length-1].letter===lastColor){
-      const h=history.pop();
-      const pts=paths[h.letter];
-      if(pts && pts.length>1) pts.pop();
+    function card(r){
+      const el = document.createElement('article');
+      el.className='card';
+      el.innerHTML = `
+        ${r.popular>=10?'<span class="ribbon">Popular</span>':''}
+        <div class="meta">
+          <span class="badge">${r.course}</span>
+          <span class="badge">${r.region}</span>
+          <span class="badge">${r.difficulty}</span>
+        </div>
+        <h3>${r.name}</h3>
+        <div class="meta">
+          <span title="Diet" class="dot ${r.diet==='Non-Veg'?'nonveg':''}"></span> ${r.diet}
+          <span>• ⏱️ ${r.time} min</span>
+          <span>• 🌶️ <span class="spice">${'★'.repeat(r.spice)}${'☆'.repeat(5-r.spice)}</span></span>
+          <span>• 👥 ${r.servings}</span>
+        </div>
+        <div class="tags">${r.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+        <div class="actions">
+          <button data-act="view" data-id="${r.id}">View Recipe</button>
+          <button class="ghost" data-act="copy" data-id="${r.id}">Copy</button>
+          <button class="like" data-act="fav" data-id="${r.id}">★</button>
+          <button class="danger" data-act="del" data-id="${r.id}">Clear</button>
+        </div>
+      `;
+
+      el.addEventListener('click', e=>{
+        const btn = e.target.closest('button'); if(!btn) return;
+        const id = btn.dataset.id; const act = btn.dataset.act; const rec = RECIPES.find(x=>x.id===id);
+        if(act==='view') openModal(rec);
+        if(act==='fav') toggleFav(id, el);
+        if(act==='copy') copyIngredients(rec);
+        if(act==='del') clearFilters();
+      });
+
+      // set fav state
+      if(state.favourites.has(r.id)) el.querySelector('[data-act="fav"]').textContent='★ Saved';
+      return el;
     }
-    drawAll();
+
+    function clearFilters(){
+      $('#q').value=''; state.q='';
+      ['course','diet','region','sort'].forEach(id=>{ if(id==='sort') $('#'+id).value='az'; else $('#'+id).value=''; });
+      $$('.chip.active').forEach(c=>c.classList.remove('active'));
+      applyFilters();
+    }
+
+    // --- Modal --------------------------------------------------------------
+    const mTitle = $('#mTitle'), mIngr=$('#mIngr'), mSteps=$('#mSteps'), mMeta=$('#mMeta'), mNotes=$('#mNotes');
+    $('#closeBtn').onclick=()=>modal.close();
+
+    function openModal(r){
+      mTitle.textContent = r.name;
+      mIngr.innerHTML = r.ingredients.map(i=>`<li>${i}</li>`).join('');
+      mSteps.innerHTML = r.steps.map(s=>`<li>${s}</li>`).join('');
+      mMeta.textContent = `${r.course} • ${r.region} • ${r.diet} • ${r.time} min • ${r.difficulty}`;
+      mNotes.textContent = r.notes || '—';
+      modal.showModal();
+      // Attach for copy/print
+      $('#copyBtn').onclick=()=>copyIngredients(r);
+      $('#printBtn').onclick=()=>printRecipe(r);
+    }
+
+    function copyIngredients(r){
+      const text = `${r.name} – Ingredients\n\n` + r.ingredients.map(i=>`• ${i}`).join('\n');
+      navigator.clipboard.writeText(text).then(()=>{
+        toast('Ingredients copied');
+      });
+    }
+
+    function printRecipe(r){
+      const w = window.open('', '_blank');
+      w.document.write(`<!DOCTYPE html><html><head><title>${r.name} – Recipe</title><meta charset="utf-8"><style>
+        body{font-family:system-ui,Segoe UI,Roboto,Arial; padding:24px}
+        h1{margin:0 0 6px}
+        .muted{color:#555}
+      </style></head><body><h1>${r.name}</h1>
+    <div class="muted">${r.course} • ${r.region} • ${r.diet} • ⏱️ ${r.time} min • ${r.difficulty}</div>
+    <h3>Ingredients</h3>
+    <ul>${r.ingredients.map(i=>`<li>${i}</li>`).join('')}</ul>
+    <h3>Steps</h3>
+    <ol>${r.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
+  </body></html>`);
+  w.document.close(); w.focus(); w.print();
+}
+
+function toggleFav(id, cardEl){
+  if(state.favourites.has(id)) state.favourites.delete(id); else state.favourites.add(id);
+  localStorage.setItem('favs', JSON.stringify([...state.favourites]));
+  const b = cardEl.querySelector('[data-act="fav"]');
+  b.textContent = state.favourites.has(id) ? '★ Saved' : '★';
+}
+
+// --- Tiny Toast ---------------------------------------------------------
+let toastT; function toast(msg){
+  clearTimeout(toastT);
+  let t = document.getElementById('toast');
+  if(!t){ t = document.createElement('div'); t.id='toast'; document.body.appendChild(t);
+    Object.assign(t.style,{position:'fixed',bottom:'20px',left:'50%',transform:'translateX(-50%)',padding:'10px 14px',background:'#111537',color:'#e8ebff',border:'1px solid #323975',borderRadius:'12px',boxShadow:'var(--shadow)',zIndex:99});
   }
+  t.textContent = msg; t.style.opacity='1'; t.style.transition='opacity .3s ease';
+  toastT = setTimeout(()=>{ t.style.opacity='0'; }, 1400);
+}
 
-  // ======== Input Handling (mouse + touch) ========
-  function posToCell(x,y){
-    const rect = gridEl.getBoundingClientRect();
-    const gx = (x-rect.left)/rect.width; const gy = (y-rect.top)/rect.height;
-    if(gx<0||gy<0||gx>1||gy>1) return null;
-    const c = Math.floor(gx*size); const r = Math.floor(gy*size); return {r,c};
-  }
+// Init
+applyFilters();
 
-  function moveAt(x,y){ if(!active) return; const cell=posToCell(x,y); if(!cell) return; stepTo(active.letter, cell.r, cell.c); }
-
-  gridEl.addEventListener('pointerdown', e=>{ e.preventDefault(); gridEl.setPointerCapture(e.pointerId); const cell=posToCell(e.clientX,e.clientY); if(!cell) return; startDragFrom(cell.r,cell.c); });
-  gridEl.addEventListener('pointermove', e=>{ moveAt(e.clientX,e.clientY); });
-  gridEl.addEventListener('pointerup', e=>{ endDrag(); gridEl.releasePointerCapture(e.pointerId); });
-  gridEl.addEventListener('pointerleave', endDrag);
-
-  // ======== UI Controls ========
-  const sel = byId('levelSelect');
-  function buildSelect(){ sel.innerHTML=''; for(let i=0;i<levels.length;i++){ const o=document.createElement('option'); o.value=i; o.textContent=`Level ${i+1}`; sel.appendChild(o);} }
-  function updateSelect(){ sel.value = current; byId('levelNum').textContent=current+1; }
-  byId('prevBtn').onclick=()=>{ if(current>0){ setupLevel(current-1); updateSelect(); }};
-  byId('nextBtn').onclick=()=>{ if(current<levels.length-1){ setupLevel(current+1); updateSelect(); }};
-  byId('resetBtn').onclick=resetLevel;
-  byId('undoBtn').onclick=undo;
-  sel.onchange=()=>{ setupLevel(parseInt(sel.value,10)); };
-
-  // ======== Kickoff ========
-  buildSelect();
-  byId('levelTotal').textContent = levels.length;
-  setupLevel(0);
-  updateSelect();
-})();
-</script></body>
+  </script>
+</body>
 </html>
