@@ -2,21 +2,38 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Test Case Excel Exporter with Browser Output</title>
+  <title>Test Case Excel Exporter with Responsive Table</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
     label { display: block; margin-top: 10px; }
     input, textarea { width: 100%; padding: 8px; margin: 4px 0; }
     button { margin-top: 12px; padding: 8px 16px; background: #4caf50; color: white; border: none; cursor: pointer; }
-    table { width: 100%; margin-top: 20px; border-collapse: collapse; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background-color: #f2f2f2; }
-    pre { margin: 0; font-family: inherit; white-space: pre-wrap; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: auto; /* allow dynamic column sizing */
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+      white-space: normal; /* allow text wrap */
+      word-wrap: break-word;
+      vertical-align: top;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    pre {
+      margin: 0;
+      font-family: inherit;
+      white-space: pre-wrap; /* wrap long text */
+    }
   </style>
 </head>
 <body>
 
-  <h2>Test Case Excel Exporter with Browser Output</h2>
+  <h2>Test Case Excel Exporter with Responsive Table</h2>
   <form id="tcForm">
     <label for="tcId">Test Case ID:</label>
     <input type="text" id="tcId" required />
