@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Test Case Excel Exporter with Responsive Table</title>
+  <title>Test Case Excel Exporter with Date Column</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
     label { display: block; margin-top: 10px; }
@@ -11,13 +11,13 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      table-layout: auto; /* allow dynamic column sizing */
+      table-layout: auto;
     }
     th, td {
       border: 1px solid #ccc;
       padding: 8px;
       text-align: left;
-      white-space: normal; /* allow text wrap */
+      white-space: normal;
       word-wrap: break-word;
       vertical-align: top;
     }
@@ -27,13 +27,13 @@
     pre {
       margin: 0;
       font-family: inherit;
-      white-space: pre-wrap; /* wrap long text */
+      white-space: pre-wrap;
     }
   </style>
 </head>
 <body>
 
-  <h2>Test Case Excel Exporter with Responsive Table</h2>
+  <h2>Test Case Excel Exporter with Date Column</h2>
   <form id="tcForm">
     <label for="tcId">Test Case ID:</label>
     <input type="text" id="tcId" required />
@@ -59,6 +59,7 @@
         <th>Description</th>
         <th>Steps</th>
         <th>Expected Result</th>
+        <th>Date Added</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -72,6 +73,17 @@
     const tbody = testCasesTable.querySelector('tbody');
     const testCases = [];
 
+    function formatDate(date) {
+      // Format date as YYYY-MM-DD HH:mm:ss for clarity
+      const d = new Date(date);
+      return d.getFullYear() + '-' +
+        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+        String(d.getDate()).padStart(2, '0') + ' ' +
+        String(d.getHours()).padStart(2, '0') + ':' +
+        String(d.getMinutes()).padStart(2, '0') + ':' +
+        String(d.getSeconds()).padStart(2, '0');
+    }
+
     function addTestCaseToTable(tc) {
       const row = document.createElement('tr');
       row.innerHTML = `
@@ -79,6 +91,7 @@
         <td>${tc["Description"]}</td>
         <td><pre>${tc["Steps"]}</pre></td>
         <td><pre>${tc["Expected Result"]}</pre></td>
+        <td>${tc["Date Added"]}</td>
       `;
       tbody.appendChild(row);
     }
@@ -89,8 +102,15 @@
       const desc = document.getElementById('tcDesc').value.trim();
       const steps = document.getElementById('tcSteps').value.trim();
       const expected = document.getElementById('tcExpected').value.trim();
+      const now = formatDate(new Date());
 
-      const tc = { "Test Case ID": id, "Description": desc, "Steps": steps, "Expected Result": expected };
+      const tc = {
+        "Test Case ID": id,
+        "Description": desc,
+        "Steps": steps,
+        "Expected Result": expected,
+        "Date Added": now
+      };
       testCases.push(tc);
 
       addTestCaseToTable(tc);
@@ -106,7 +126,7 @@
         return;
       }
       try {
-        const ws = XLSX.utils.json_to_sheet(testCases, { header: ["Test Case ID", "Description", "Steps", "Expected Result"] });
+        const ws = XLSX.utils.json_to_sheet(testCases, { header: ["Test Case ID", "Description", "Steps", "Expected Result", "Date Added"] });
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Test Cases");
         XLSX.writeFile(wb, "test-cases.xlsx");
