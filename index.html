@@ -2,139 +2,100 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Test Case Excel Exporter with Date Column</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    label { display: block; margin-top: 10px; }
-    input, textarea { width: 100%; padding: 8px; margin: 4px 0; }
-    button { margin-top: 12px; padding: 8px 16px; background: #4caf50; color: white; border: none; cursor: pointer; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      table-layout: auto;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: left;
-      white-space: normal;
-      word-wrap: break-word;
-      vertical-align: top;
-    }
-    th {
-      background-color: #f2f2f2;
-    }
-    pre {
-      margin: 0;
-      font-family: inherit;
-      white-space: pre-wrap;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>KSH</title>
+  <link rel="stylesheet" href="style.css"> 
 </head>
 <body>
 
-  <h2>Test Case Excel Exporter with Date Column</h2>
-  <form id="tcForm">
-    <label for="tcId">Test Case ID:</label>
-    <input type="text" id="tcId" required />
+  <div id="topMenu">
+    <img src="RSIMAGE.png" alt="Rupeeseed Logo">
+    <nav>
+      <a href="1.html" target="pdfViewer">Home</a>
+<div class="dropdown">
+        <button class="dropbtn">File Uploader</button>
+        <div class="dropdown-content">
+      <a href="http://172.16.101.74:8080/RupeeFileUpload" target="_blank">74</a>
+          <a href="http://172.16.101.68:8080/RupeeFileUpload" target="_blank">68</a></div>
+</div>
+      <div class="dropdown">
+        <button class="dropbtn">RS Utility</button>
+        <div class="dropdown-content">
+      <a href="BO.html" target="pdfViewer">BO Files</a>
+      <a href="POS.html" target="pdfViewer">Position Files</a>
+      <a href="circ.html" target="pdfViewer">Circuit Threshold</a>
+      <a href="Phy.html" target="pdfViewer">Physical Margin</a>
+      <a href="peak.html" target="pdfViewer">Peak Margin</a>
+      <a href="MWPL.html" target="pdfViewer">MWPL</a>
+      <a href="BNSEEQ.html" target="pdfViewer">Bulk EQ</a>
+      <a href="BulkFO.html" target="pdfViewer">Bulk FO</a>    
+      <a href="Tr.html" target="pdfViewer">Bulk Generator</a>
+<a href="MWkkkkPL.html" target="pdfViewer">T2</a>
+          <a href="mk.html" target="pdfViewer">mk</a>
 
-    <label for="tcDesc">Description:</label>
-    <textarea id="tcDesc" required></textarea>
 
-    <label for="tcSteps">Steps:</label>
-    <textarea id="tcSteps" required></textarea>
+          
+</div>
+      </div>
+          
 
-    <label for="tcExpected">Expected Result:</label>
-    <textarea id="tcExpected" required></textarea>
+      <!-- RS Docs Dropdown -->
+      <div class="dropdown">
+        <button class="dropbtn">RS Docs</button>
+        <div class="dropdown-content">
+          <a href="Profile_Master_new.pdf" target="pdfViewer">Profile Master</a>
+          <a href="sysparameter_3.0.pdf" target="pdfViewer">Sysparameter</a>
+          <a href="RupeeSeed_RMS_FileFormat_1.0.61 3.0.pdf" target="pdfViewer">File Format 3.0</a>
+          <a href="RupeeSeedRMSFileFormat 4.0.pdf" target="pdfViewer">File Format 4.0</a>
+          <a href="MCX-FundAllocation.pdf" target="pdfViewer">MCX Allocation</a>
+          <a href="Draft Circuit Threshold Position to be viewed and square off.pdf" target="pdfViewer">Circuit Threshold</a>
+          <a href="SQL.TXT" target="pdfViewer">SQL/PUTTY</a>
 
-    <button type="submit">Add Test Case</button>
-  </form>
+<a href="wp.html" target="pdfViewer">Wiki</a>
+          <a href="Task.html" target="pdfViewer">T</a>
 
-  <button id="exportBtn" style="display:none;">Export to Excel</button>
+<a href="dash.html" target="pdfViewer">D</a>
 
-  <table id="testCasesTable" style="display:none;">
-    <thead>
-      <tr>
-        <th>Test Case ID</th>
-        <th>Description</th>
-        <th>Steps</th>
-        <th>Expected Result</th>
-        <th>Date Added</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+<a href="pk.html" target="pdfViewer">pk</a>
 
-  <script src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
-  <script>
-    const form = document.getElementById('tcForm');
-    const exportBtn = document.getElementById('exportBtn');
-    const testCasesTable = document.getElementById('testCasesTable');
-    const tbody = testCasesTable.querySelector('tbody');
-    const testCases = [];
+<a href="ntt.html" target="pdfViewer">ntt</a>
+<a href="newcirc.html" target="pdfViewer">newcirc</a>
+<a href="anyForm.html" target="pdfViewer">anyForm</a>
 
-    function formatDate(date) {
-      const d = new Date(date);
-      return String(d.getDate()).padStart(2, '0') + '-' +
-        String(d.getMonth() + 1).padStart(2, '0') + '-' +
-        d.getFullYear() + ' ' +
-        String(d.getHours()).padStart(2, '0') + ':' +
-        String(d.getMinutes()).padStart(2, '0') + ':' +
-        String(d.getSeconds()).padStart(2, '0');
-    }
 
-    function addTestCaseToTable(tc) {
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${tc["Test Case ID"]}</td>
-        <td>${tc["Description"]}</td>
-        <td><pre>${tc["Steps"]}</pre></td>
-        <td><pre>${tc["Expected Result"]}</pre></td>
-        <td>${tc["Date Added"]}</td>
-      `;
-      tbody.appendChild(row);
-    }
 
-    form.onsubmit = function(e) {
-      e.preventDefault();
-      const id = document.getElementById('tcId').value.trim();
-      const desc = document.getElementById('tcDesc').value.trim();
-      const steps = document.getElementById('tcSteps').value.trim();
-      const expected = document.getElementById('tcExpected').value.trim();
-      const now = formatDate(new Date());
 
-      const tc = {
-        "Test Case ID": id,
-        "Description": desc,
-        "Steps": steps,
-        "Expected Result": expected,
-        "Date Added": now
-      };
-      testCases.push(tc);
 
-      addTestCaseToTable(tc);
-      testCasesTable.style.display = 'table';
-      exportBtn.style.display = 'inline-block';
+<a href="pki.html" target="pdfViewer">pki</a>
 
-      form.reset();
-    };
+<a href="ntt.html" target="pdfViewer">ntt</a>
 
-    exportBtn.onclick = function() {
-      if (testCases.length === 0) {
-        alert("Please add at least one test case.");
-        return;
-      }
-      try {
-        const ws = XLSX.utils.json_to_sheet(testCases, { header: ["Test Case ID", "Description", "Steps", "Expected Result", "Date Added"] });
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Test Cases");
-        XLSX.writeFile(wb, "test-cases.xlsx");
-      } catch (error) {
-        alert("Export failed: " + error.message);
-        console.error(error);
-      }
-    };
-  </script>
+
+
+
+        </div>
+      </div>
+
+      
+
+      <!-- Exchange Sites Dropdon -->
+      <div class="dropdown">
+        <button class="dropbtn">Exchange Sites</button>
+        <div class="dropdown-content">
+          <a href="https://www.nseindia.com/" target="_blank">NSE</a>
+          <a href="https://www.bseindia.com/" target="_blank">BSE</a>
+          <a href="https://member.bseindia.com/" target="_blank">Member BSE</a>
+          <a href="https://www.mcxindia.com/" target="_blank">MCX</a>
+          <a href="https://sftp.mcxindia.com/?Command=Login" target="_blank">SFTP MCX</a>
+          <a href="https://www.rupeeseed.com/" target="_blank">RupeeSeed</a>
+        </div>
+      </div>
+    </nav>
+  </div>
+
+  <div id="mainContent">
+    <iframe id="pdfViewer" name="pdfViewer" src="1.html"></iframe>
+  </div>
 
 </body>
 </html>
