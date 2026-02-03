@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CSV Client & Date Replace Tool</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #eef2f7;
+    padding: 25px;
+}
+.container {
+    background: #fff;
+    max-width: 1300px;
+    margin: auto;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+h2 { margin-bottom: 15px; }
+.controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+}
+input, button {
+    padding: 9px;
+    font-size: 14px;
+}
+button {
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.preview { background:#0d6efd; color:#fff; }
+.download { background:#198754; color:#fff; }
+.clear { background:#6c757d; color:#fff; }
+
+table {
+    width:100%;
+    border-collapse:collapse;
+    margin-top:15px;
+}
+th, td {
+    border:1px solid #ddd;
+    padding:7px;
+    text-align:center;
+}
+th { background:#f3f6fa; }
+
+.info {
+    background:#f0f8ff;
+    padding:10px;
+    margin-top:12px;
+    border-left:4px solid #0d6efd;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h2>CSV Client Replace (TEST1 / TEST3) & Date Update</h2>
+
+<div class="controls">
+    <input type="text" id="client1" placeholder="Replace TEST1 with">
+    <input type="text" id="client2" placeholder="Replace TEST3 with">
+    <input type="date" id="expiryDate">
+</div>
+
+<br>
+
+<button class="preview" onclick="previewCSV()">Preview</button>
+<button class="download" onclick="downloadCSV()">Download</button>
+<button class="clear" onclick="clearAll()">Clear</button>
+
+<div id="output"></div>
+</div>
+
+<script>
+// ================= FILE NAME =================
+const FILE_NAME = "Position_NCL_FO_0_CM_6538_2024.csv";
+
+// ================= HARDCODED CSV =================
+const RAW_CSV = `
+ClntId,RptgDt,BizDt,XpryDt,FininstrmActlXpryDt,Qty
+TEST1,2024-02-01,2024-02-01,2024-02-27,2024-02-27,10
+TEST3,2024-02-01,2024-02-01,2024-02-27,2024-02-27,20
+`.trim();
+
+let headers = [];
+let rows = [];
+
+/* ---------- Parse CSV ---------- */
+(function initCSV() {
+    const lines = RAW_CSV.split("\n");
+    headers = lines[0].split(",");
+    rows = lines.slice(1).map(l => l.split(","));
+})();
+
+/* ---------- Last Tuesday (MIDDAY SAFE) ---------- */
+function getLastTuesday(year, month) {
+    let d = new Date(year, month + 1, 0, 12, 0, 0);
+    while (d.getDay() !== 2) d.setDate(d.getDate() - 1);
+    return d;
+}
+
+/* ---------- Local YYYY-MM-DD ---------- */
+function formatLocalDate(d) {
+    return d.getFullYear() + "-" +
+        String(d.getMonth() + 1).padStart(2, "0") + "-" +
+        String(d.getDate()).padStart(2, "0");
+}
+
+/* ---------- Default expiry ---------- */
+(function () {
+    let now = new Date();
+    let lastTue = getLastTuesday(now.getFullYear(), now.getMonth());
+    document.getElementById("expiryDate").value =
+        formatLocalDate(lastTue);
+})();
+
+/* ---------- Preview + Apply ---------- */
+function previewCSV() {
+    let c1 = document.getElementById("client1").value.trim();
+    let c2 = document.getElementById("client2").value.trim();
+    let exp = document.getElementById("expiryDate").value;
+
+    if (!c1 || !c2 || !exp) {
+        alert("Fill all inputs");
+        return;
+    }
+
+    const clntIdx = headers.indexOf("ClntId");
+    const DATE_COLS = ["RptgDt","BizDt","XpryDt","FininstrmActlXpryDt"];
+
+    rows = rows.map(r => {
+        let row = [...r];
+
+        if (clntIdx !== -1) {
+            if (row[clntIdx] === "TEST1") row[clntIdx] = c1;
+            if (row[clntIdx] === "TEST3") row[clntIdx] = c2;
+        }
+
+        DATE_COLS.forEach(col => {
+            let idx = headers.indexOf(col);
+            if (idx !== -1) row[idx] = exp;
+        });
+
+        return row;
+    });
+
+    renderTable(c1, c2, exp);
+}
+
+/* ---------- Render ---------- */
+function renderTable(c1, c2, exp) {
+    let html = `
+    <div class="info">
+        TEST1 → <b>${c1}</b> |
+        TEST3 → <b>${c2}</b> |
+        Date → <b>${exp}</b>
+    </div>
+    <table><tr>`;
+
+    headers.forEach(h => html += `<th>${h}</th>`);
+    html += "</tr>";
+
+    rows.forEach(r => {
+        html += "<tr>";
+        r.forEach(c => html += `<td>${c}</td>`);
+        html += "</tr>";
+    });
+
+    html += "</table>";
+    document.getElementById("output").innerHTML = html;
+}
+
+/* ---------- Download (same file name) ---------- */
+function downloadCSV() {
+    let csv =
+        headers.join(",") + "\n" +
+        rows.map(r => r.join(",")).join("\n");
+
+    let blob = new Blob([csv], { type:"text/csv" });
+    let a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = FILE_NAME;
+    a.click();
+}
+
+/* ---------- Clear ---------- */
+function clearAll() {
+    document.getElementById("client1").value = "";
+    document.getElementById("client2").value = "";
+
+    let now = new Date();
+    let lastTue = getLastTuesday(now.getFullYear(), now.getMonth());
+    document.getElementById("expiryDate").value =
+        formatLocalDate(lastTue);
+
+    // reset CSV back to original
+    initCSV();
+    document.getElementById("output").innerHTML = "";
+}
+</script>
+
+</body>
+</html>
