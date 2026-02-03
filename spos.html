@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CSV Client Replace & Expiry Update</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #eef2f7;
+    padding: 25px;
+}
+.container {
+    background: #fff;
+    max-width: 1300px;
+    margin: auto;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+h2 { margin-bottom: 15px; }
+.controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+}
+input, button {
+    padding: 9px;
+    font-size: 14px;
+}
+button {
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.preview { background:#0d6efd; color:#fff; }
+.download { background:#198754; color:#fff; }
+.clear { background:#6c757d; color:#fff; }
+
+table {
+    width:100%;
+    border-collapse:collapse;
+    margin-top:15px;
+}
+th, td {
+    border:1px solid #ddd;
+    padding:7px;
+    text-align:center;
+}
+th { background:#f3f6fa; }
+
+.info {
+    background:#f0f8ff;
+    padding:10px;
+    margin-top:12px;
+    border-left:4px solid #0d6efd;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h2>CSV Client Replace (TEST1 / TEST3)</h2>
+
+<div class="controls">
+    <input type="file" id="csvFile" accept=".csv">
+    <input type="text" id="client1" placeholder="Replace TEST1 with">
+    <input type="text" id="client2" placeholder="Replace TEST3 with">
+    <input type="date" id="expiryDate">
+</div>
+
+<br>
+
+<button class="preview" onclick="previewCSV()">Preview</button>
+<button class="download" onclick="downloadCSV()">Download</button>
+<button class="clear" onclick="clearAll()">Clear</button>
+
+<div id="output"></div>
+</div>
+
+<script>
+let headers = [];
+let rows = [];
+
+/* ---------- Last Tuesday ---------- */
+function getLastTuesday(year, month) {
+    let d = new Date(year, month + 1, 0);
+    while (d.getDay() !== 2) d.setDate(d.getDate() - 1);
+    return d;
+}
+
+/* ---------- Default expiry ---------- */
+(function () {
+    let now = new Date();
+    let lastTue = getLastTuesday(now.getFullYear(), now.getMonth());
+    document.getElementById("expiryDate").value =
+        lastTue.toISOString().split("T")[0];
+})();
+
+/* ---------- CSV Upload ---------- */
+document.getElementById("csvFile").addEventListener("change", e => {
+    let reader = new FileReader();
+    reader.onload = () => {
+        let lines = reader.result.trim().split("\n");
+        headers = lines[0].split(",");
+        rows = lines.slice(1).map(l => l.split(","));
+    };
+    reader.readAsText(e.target.files[0]);
+});
+
+/* ---------- Preview + Apply ---------- */
+function previewCSV() {
+    if (!rows.length) return alert("Upload CSV first");
+
+    let c1 = document.getElementById("client1").value.trim();
+    let c2 = document.getElementById("client2").value.trim();
+    let expRaw = document.getElementById("expiryDate").value;
+
+    if (!c1 || !c2 || !expRaw)
+        return alert("Fill all inputs");
+
+    // YYYYMMDD
+    let d = new Date(expRaw);
+    let exp =
+        d.getFullYear() +
+        String(d.getMonth()+1).padStart(2,"0") +
+        String(d.getDate()).padStart(2,"0");
+
+    const clntIdx = headers.indexOf("ClntId");
+    const finIdx  = headers.indexOf("FininstrmActlXpryDt");
+    const xpryIdx = headers.indexOf("XpryDt");
+
+    rows = rows.map(r => {
+        let row = [...r];
+
+        if (clntIdx !== -1) {
+            if (row[clntIdx] === "TEST1") row[clntIdx] = c1;
+            if (row[clntIdx] === "TEST3") row[clntIdx] = c2;
+        }
+
+        if (finIdx  !== -1) row[finIdx]  = exp;
+        if (xpryIdx !== -1) row[xpryIdx] = exp;
+
+        return row;
+    });
+
+    renderTable(c1, c2, exp);
+}
+
+/* ---------- Render ---------- */
+function renderTable(c1, c2, exp) {
+    let html = `
+    <div class="info">
+        TEST1 → <b>${c1}</b> |
+        TEST3 → <b>${c2}</b> |
+        Expiry → <b>${exp}</b>
+    </div>
+    <table><tr>`;
+
+    headers.forEach(h => html += `<th>${h}</th>`);
+    html += "</tr>";
+
+    rows.forEach(r => {
+        html += "<tr>";
+        r.forEach(c => html += `<td>${c}</td>`);
+        html += "</tr>";
+    });
+
+    html += "</table>";
+    document.getElementById("output").innerHTML = html;
+}
+
+/* ---------- Download ---------- */
+function downloadCSV() {
+    if (!rows.length) return alert("Nothing to download");
+    let csv =
+        headers.join(",") + "\n" +
+        rows.map(r => r.join(",")).join("\n");
+
+    let blob = new Blob([csv], { type:"text/csv" });
+    let a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "updated.csv";
+    a.click();
+}
+
+/* ---------- Clear ---------- */
+function clearAll() {
+    headers = [];
+    rows = [];
+    document.getElementById("output").innerHTML = "";
+    document.getElementById("csvFile").value = "";
+    document.getElementById("client1").value = "";
+    document.getElementById("client2").value = "";
+
+    let now = new Date();
+    let lastTue = getLastTuesday(now.getFullYear(), now.getMonth());
+    document.getElementById("expiryDate").value =
+        lastTue.toISOString().split("T")[0];
+}
+</script>
+
+</body>
+</html>
