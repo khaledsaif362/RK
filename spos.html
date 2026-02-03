@@ -83,24 +83,24 @@ th { background:#f3f6fa; }
 let headers = [];
 let rows = [];
 
-/* ---------- Last Tuesday (LOCAL SAFE) ---------- */
+/* ---------- Last Tuesday (MIDDAY SAFE) ---------- */
 function getLastTuesday(year, month) {
-    let d = new Date(year, month + 1, 0);
+    // 🔒 create date at 12:00 to avoid timezone rollback
+    let d = new Date(year, month + 1, 0, 12, 0, 0);
     while (d.getDay() !== 2) {
         d.setDate(d.getDate() - 1);
     }
     return d;
 }
 
-/* ---------- Local YYYY-MM-DD formatter ---------- */
+/* ---------- Local YYYY-MM-DD ---------- */
 function formatLocalDate(d) {
-    let y = d.getFullYear();
-    let m = String(d.getMonth() + 1).padStart(2, "0");
-    let day = String(d.getDate()).padStart(2, "0");
-    return `${y}-${m}-${day}`;
+    return d.getFullYear() + "-" +
+        String(d.getMonth() + 1).padStart(2, "0") + "-" +
+        String(d.getDate()).padStart(2, "0");
 }
 
-/* ---------- Default expiry = last Tuesday ---------- */
+/* ---------- Default expiry ---------- */
 (function () {
     let now = new Date();
     let lastTue = getLastTuesday(now.getFullYear(), now.getMonth());
@@ -141,13 +141,11 @@ function previewCSV() {
     rows = rows.map(r => {
         let row = [...r];
 
-        // Client replace (simple rule)
         if (clntIdx !== -1) {
             if (row[clntIdx] === "TEST1") row[clntIdx] = c1;
             if (row[clntIdx] === "TEST3") row[clntIdx] = c2;
         }
 
-        // Date replace (YYYY-MM-DD)
         DATE_COLS.forEach(col => {
             let idx = headers.indexOf(col);
             if (idx !== -1) row[idx] = exp;
@@ -184,10 +182,7 @@ function renderTable(c1, c2, exp) {
 
 /* ---------- Download ---------- */
 function downloadCSV() {
-    if (!rows.length) {
-        alert("Nothing to download");
-        return;
-    }
+    if (!rows.length) return alert("Nothing to download");
     let csv =
         headers.join(",") + "\n" +
         rows.map(r => r.join(",")).join("\n");
