@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>CSV Client Replace & Expiry Update</title>
+<title>CSV Client & Date Updater</title>
 
 <style>
 body {
@@ -61,7 +61,7 @@ th { background:#f3f6fa; }
 <body>
 
 <div class="container">
-<h2>CSV Client Replace (TEST1 / TEST3)</h2>
+<h2>CSV Client & Date Replace Tool</h2>
 
 <div class="controls">
     <input type="file" id="csvFile" accept=".csv">
@@ -115,32 +115,30 @@ function previewCSV() {
 
     let c1 = document.getElementById("client1").value.trim();
     let c2 = document.getElementById("client2").value.trim();
-    let expRaw = document.getElementById("expiryDate").value;
+    let exp = document.getElementById("expiryDate").value;
 
-    if (!c1 || !c2 || !expRaw)
+    if (!c1 || !c2 || !exp)
         return alert("Fill all inputs");
 
-    // YYYYMMDD
-    let d = new Date(expRaw);
-    let exp =
-        d.getFullYear() +
-        String(d.getMonth()+1).padStart(2,"0") +
-        String(d.getDate()).padStart(2,"0");
-
     const clntIdx = headers.indexOf("ClntId");
-    const finIdx  = headers.indexOf("FininstrmActlXpryDt");
-    const xpryIdx = headers.indexOf("XpryDt");
+
+    // Date columns to update (YYYY-MM-DD)
+    const DATE_COLS = ["RptgDt","BizDt","XpryDt","FininstrmActlXpryDt"];
 
     rows = rows.map(r => {
         let row = [...r];
 
+        // Client replace
         if (clntIdx !== -1) {
             if (row[clntIdx] === "TEST1") row[clntIdx] = c1;
             if (row[clntIdx] === "TEST3") row[clntIdx] = c2;
         }
 
-        if (finIdx  !== -1) row[finIdx]  = exp;
-        if (xpryIdx !== -1) row[xpryIdx] = exp;
+        // Date replace
+        DATE_COLS.forEach(col => {
+            let idx = headers.indexOf(col);
+            if (idx !== -1) row[idx] = exp;
+        });
 
         return row;
     });
@@ -154,7 +152,7 @@ function renderTable(c1, c2, exp) {
     <div class="info">
         TEST1 → <b>${c1}</b> |
         TEST3 → <b>${c2}</b> |
-        Expiry → <b>${exp}</b>
+        Date → <b>${exp}</b>
     </div>
     <table><tr>`;
 
