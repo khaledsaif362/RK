@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>CSV Client & Date Updater</title>
+<title>CSV Client & Date Replace Tool</title>
 
 <style>
 body {
@@ -61,7 +61,7 @@ th { background:#f3f6fa; }
 <body>
 
 <div class="container">
-<h2>CSV Client & Date Replace Tool</h2>
+<h2>CSV Client Replace (TEST1 / TEST3) & Date Update</h2>
 
 <div class="controls">
     <input type="file" id="csvFile" accept=".csv">
@@ -83,19 +83,29 @@ th { background:#f3f6fa; }
 let headers = [];
 let rows = [];
 
-/* ---------- Last Tuesday ---------- */
+/* ---------- Last Tuesday (LOCAL SAFE) ---------- */
 function getLastTuesday(year, month) {
     let d = new Date(year, month + 1, 0);
-    while (d.getDay() !== 2) d.setDate(d.getDate() - 1);
+    while (d.getDay() !== 2) {
+        d.setDate(d.getDate() - 1);
+    }
     return d;
 }
 
-/* ---------- Default expiry ---------- */
+/* ---------- Local YYYY-MM-DD formatter ---------- */
+function formatLocalDate(d) {
+    let y = d.getFullYear();
+    let m = String(d.getMonth() + 1).padStart(2, "0");
+    let day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+}
+
+/* ---------- Default expiry = last Tuesday ---------- */
 (function () {
     let now = new Date();
     let lastTue = getLastTuesday(now.getFullYear(), now.getMonth());
     document.getElementById("expiryDate").value =
-        lastTue.toISOString().split("T")[0];
+        formatLocalDate(lastTue);
 })();
 
 /* ---------- CSV Upload ---------- */
@@ -111,30 +121,33 @@ document.getElementById("csvFile").addEventListener("change", e => {
 
 /* ---------- Preview + Apply ---------- */
 function previewCSV() {
-    if (!rows.length) return alert("Upload CSV first");
+    if (!rows.length) {
+        alert("Upload CSV first");
+        return;
+    }
 
     let c1 = document.getElementById("client1").value.trim();
     let c2 = document.getElementById("client2").value.trim();
     let exp = document.getElementById("expiryDate").value;
 
-    if (!c1 || !c2 || !exp)
-        return alert("Fill all inputs");
+    if (!c1 || !c2 || !exp) {
+        alert("Fill all inputs");
+        return;
+    }
 
     const clntIdx = headers.indexOf("ClntId");
-
-    // Date columns to update (YYYY-MM-DD)
     const DATE_COLS = ["RptgDt","BizDt","XpryDt","FininstrmActlXpryDt"];
 
     rows = rows.map(r => {
         let row = [...r];
 
-        // Client replace
+        // Client replace (simple rule)
         if (clntIdx !== -1) {
             if (row[clntIdx] === "TEST1") row[clntIdx] = c1;
             if (row[clntIdx] === "TEST3") row[clntIdx] = c2;
         }
 
-        // Date replace
+        // Date replace (YYYY-MM-DD)
         DATE_COLS.forEach(col => {
             let idx = headers.indexOf(col);
             if (idx !== -1) row[idx] = exp;
@@ -171,7 +184,10 @@ function renderTable(c1, c2, exp) {
 
 /* ---------- Download ---------- */
 function downloadCSV() {
-    if (!rows.length) return alert("Nothing to download");
+    if (!rows.length) {
+        alert("Nothing to download");
+        return;
+    }
     let csv =
         headers.join(",") + "\n" +
         rows.map(r => r.join(",")).join("\n");
@@ -195,7 +211,7 @@ function clearAll() {
     let now = new Date();
     let lastTue = getLastTuesday(now.getFullYear(), now.getMonth());
     document.getElementById("expiryDate").value =
-        lastTue.toISOString().split("T")[0];
+        formatLocalDate(lastTue);
 }
 </script>
 
